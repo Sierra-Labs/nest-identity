@@ -1,0 +1,7 @@
+FROM postgres:10.4
+
+ENV POSTGRES_DB=identity \
+    POSTGRES_USER=admin \
+    POSTGRES_PASSWORD=l0c4lp4ss
+
+EXPOSE 5432

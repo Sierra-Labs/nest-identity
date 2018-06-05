@@ -1,0 +1,56 @@
+{
+  "http": {
+    "port": "ENV:HTTP_PORT"
+  },
+  "jwt": {
+    "secret": "my-secet",
+    "expiresIn" : "1y"
+  },
+  "api": {
+    "basePath": "",
+    "explorer": false
+  },
+  "aws": {
+    "accessKeyId": "access-key-id",
+    "secretAccessKey": "secret-access-key",
+    "region": "us-west-2",
+    "s3": {
+      "bucket": "bucket",
+      "bucketUrl": "https://s3-us-west-2.amazonaws.com/bucket"
+    }
+  },
+  "cookie": {
+    "secret": "supersecret"
+  },
+  "database": {
+    "type": "postgres",
+    "host": "ENV:DB_HOST",
+    "port": "ENV:DB_PORT",
+    "username": "ENV:DB_USER",
+    "password": "ENV:DB_PASSWORD",
+    "database": "ENV:DB_NAME",
+    "poolMax": 100,
+    "ssl": true
+  },
+  "email": {
+    "from": "noreply@example.com",
+    "settings": {
+      "pool": true,
+      "host": "smtp.example.com",
+      "port": 465,
+      "secure": true,
+      "auth": {
+        "user": "username",
+        "pass": "password"
+      }
+    }
+  },
+  "pagination" : {
+    "defaultPageSize": 100,
+    "maxPageSize": 200
+  },
+  "password": {
+    "rounds": 14
+  }
+}
+

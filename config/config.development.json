@@ -1,0 +1,19 @@
+{
+  "http": {
+    "port": 3000
+  },
+  "api": {
+    "explorer": true,
+    "explorerPath": "/explorer"
+  },
+  "database": {
+    "type": "postgres",
+    "host": "localhost",
+    "port": 5432,
+    "username": "admin",
+    "password": "l0c4lp4ss",
+    "database": "identity",
+    "poolMax": 10,
+    "ssl": false
+  }
+}

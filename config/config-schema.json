@@ -1,0 +1,82 @@
+{
+  "http": {
+    "port": {
+      "doc": "Port to run the application.",
+      "format": "Number",
+      "default": 3000,
+      "env": "HTTP_PORT"
+    }
+  },
+  "jwt": {
+    "secret": {
+      "doc": "String, buffer, or object containing either the secret for HMAC algorithms or the PEM encoded private key for RSA and ECDSA.",
+      "format": "String",
+      "default": "my-secret",
+      "env": "JWT_EXPIRES_IN",
+      "sensitive": true
+    },
+    "expiresIn": {
+      "doc": "expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms). Eg: `60`, `\"2 days\"`, `\"10h\"`, `\"7d\"`. A numeric value is interpreted as a seconds count. If you use a string be sure you provide the time units (days, hours, etc), otherwise milliseconds unit is used by default (`\"120\"` is equal to `\"120ms\"`).",
+      "format": "*",
+      "default": "120ms",
+      "env": "JWT_EXPIRES_IN"
+    }
+  },
+  "api": {
+    "basePath": {
+      "doc": "The base URL path for application.",
+      "format": "String",
+      "default": ""
+    },
+    "explorer": {
+      "doc": "Determines if Swagger (Open API) is enabled.",
+      "format": "Boolean",
+      "default": false
+    },
+    "explorerPath": {
+      "doc": "The URL path for Swagger (Open API) specification.",
+      "format": "String",
+      "default": "/explorer"
+    }
+  },
+  "database": {
+    "type": {
+      "format": "String",
+      "default": "postgres"
+    },
+    "host": {
+      "format": "String",
+      "default": "localhost",
+      "env": "DB_HOST"
+    },
+    "port": {
+      "format": "Number",
+      "default": 5432,
+      "env": "DB_PORT"
+    },
+    "username": {
+      "format": "String",
+      "default": "root",
+      "env": "DB_USER"
+    },
+    "password": {
+      "format": "String",
+      "default": "",
+      "env": "DB_PASSWORD",
+      "sensitive": true
+    },
+    "database": {
+      "format": "String",
+      "default": "",
+      "env": "DB_NAME"
+    },
+    "poolMax": {
+      "format": "Number",
+      "default": 100
+    },
+    "ssl": {
+      "format": "Boolean",
+      "default": true
+    }
+  }
+}
