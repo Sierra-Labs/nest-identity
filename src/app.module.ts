@@ -1,6 +1,5 @@
 import { Module, forwardRef } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import {  } from './config/config.service';
 import { UserModule } from './user/user.module';
 import { RolesGuard } from './roles/roles.guard';
 import { AuthModule } from './auth/auth.module';
