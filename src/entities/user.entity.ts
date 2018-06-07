@@ -1,4 +1,5 @@
-import { Entity, Column, Index, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable } from 'typeorm';
+import { Entity, Column, Index, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable,
+  TableInheritance, ChildEntity } from 'typeorm';
 import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsNotEmpty, MinLength, IsMobilePhone } from 'class-validator';
@@ -11,13 +12,7 @@ export class User {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  /**
-   * The user identifier from the Point-of-Sale (POS) system
-   */
-  @ApiModelProperty()
-  @Column({ nullable: true })
-  public posId: number;
-
+  public roleType;
   /**
    * User email address for communication and login.
    */
@@ -31,14 +26,6 @@ export class User {
   @MinLength(8)
   public password: string;
 
-  /**
-   * Mobile number of the user for sending text message notifications.
-   */
-  @ApiModelProperty()
-  @Column('text', { name: 'mobile_number', nullable: true })
-  @IsMobilePhone('en-US')
-  public mobileNumber: string;
-
   @ApiModelProperty()
   @Column('text', { name: 'first_name' })
   public firstName: string;
@@ -46,13 +33,6 @@ export class User {
   @ApiModelProperty()
   @Column('text', { name: 'last_name' })
   public lastName: string;
-
-  /**
-   * Patient medical ID number.
-   */
-  @ApiModelProperty()
-  @Column('text', { name: 'patient_number', nullable: true })
-  public patientNumber: string;
 
   @ApiModelProperty()
   @Column()
@@ -62,6 +42,7 @@ export class User {
   @CreateDateColumn()
   public created: Date;
 
+  @ApiModelPropertyOptional()
   @Column({ name: 'created_by', nullable: true })
   public createdBy: number;
 
@@ -69,6 +50,7 @@ export class User {
   @UpdateDateColumn()
   public modified: Date;
 
+  @ApiModelPropertyOptional()
   @Column({ name: 'modified_by', nullable: true })
   public modifiedBy: number;
 

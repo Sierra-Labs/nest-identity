@@ -1,6 +1,5 @@
 import { Test } from '@nestjs/testing';
 import { UserController } from './user.controller';
-import { UserRepository, UserRepositoryProvider } from './user.repository';
 import { UserModule } from './user.module';
 import { AppModule } from '../app.module';
 import { INestApplication } from '@nestjs/common';
@@ -22,7 +21,7 @@ describe('UserControler', () => {
   // let app: INestApplication;
   let userController: UserController;
   let userService: UserService;
-  let userRepository: UserRepository;
+  let userRepository: Repository<User>;
 
   const configService = new ConfigService();
   const config = configService.get('database') || {};
@@ -33,7 +32,7 @@ describe('UserControler', () => {
       }).compile();
 
     userController = module.get<UserController>(UserController);
-    userRepository = module.get<UserRepository>(UserRepository);
+    userRepository = module.get<Repository<User>>('UserRepository');
     userService = module.get<UserService>(UserService);
 
   });
@@ -48,7 +47,6 @@ describe('UserControler', () => {
       user.firstName = 'Jonny';
       user.lastName = 'Appleseed';
       user.password = 'password';
-      user.mobileNumber = '3105551234';
 
       jest.spyOn(userRepository, 'save').mockImplementation(async (entity: User) => {
         expect(entity).not.toHaveProperty('id');
@@ -71,7 +69,6 @@ describe('UserControler', () => {
       user.firstName = 'Jonny';
       user.lastName = 'Appleseed2';
       user.password = 'password';
-      user.mobileNumber = '3105551234';
 
       jest.spyOn(userRepository, 'save').mockImplementation(async (entity: User) => {
         // throw new QueryFailedError();
@@ -93,7 +90,7 @@ describe('UserControler', () => {
       // jest.spyOn(userRepository, 'findWithFilter').mockImplementation(() => result);
       // const data = await userRepository.findWithFilter('id asc', 100, 0, '');
 
-      jest.spyOn(userRepository, 'findWithFilter').mockImplementation(() => result);
+      jest.spyOn(userService, 'findWithFilter').mockImplementation(() => result);
       const data = await userController.getAll();
 
       expect(data).toBe(result);

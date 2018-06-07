@@ -10,7 +10,6 @@ import {
   HttpCode
 } from '@nestjs/common';
 import { User } from '../entities/user.entity';
-import { UserRepository } from './user.repository';
 import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from './user.service';
 import { Roles } from '../roles';
@@ -24,14 +23,14 @@ import {
   RequestProperty,
   ParseEntityPipe
 } from '@sierralabs/nest-utils';
+import { ModuleRef } from '@nestjs/core';
 
 @Controller('users')
 export class UserController {
+
   constructor(
-    @InjectRepository(User)
-    private readonly userRepository: UserRepository,
-    private readonly userService: UserService,
-    private readonly configService: ConfigService
+    protected readonly userService: UserService,
+    protected readonly configService: ConfigService
   ) {}
 
   // @ApiImplicitBody({ name: 'email', required: true, type: String })
@@ -61,9 +60,8 @@ export class UserController {
     @Body(new RequiredPipe())
     user: User
   ): Promise<User> {
-    delete user.id; // make sure no existing id exists when saving user
     user = await this.userService.changePassword(user, user.password);
-    const newUser = await this.userRepository.save(user);
+    const newUser = await this.userService.create(user);
     return newUser;
   }
 
@@ -82,7 +80,7 @@ export class UserController {
     }
 
     // try/catch to catch unique key failure, etc
-    const newUser = await this.userRepository.save(user);
+    const newUser = await this.userService.create(user);
 
     // TODO: Imeplement email delivery
     // const fromEmail = await this.configService.get('email.from');
@@ -111,7 +109,7 @@ export class UserController {
     user.id = id;
 
     // determine if sensitive data is changed
-    const oldUser = await this.userRepository.findOne(id);
+    const oldUser = await this.userService.findById(id);
     if (user.email && user.email !== oldUser.email) {
       user.verified = false;
     }
@@ -125,7 +123,7 @@ export class UserController {
     //   await this.mediaRepository.save(media);
     // }
 
-    const newUser = await this.userRepository.save(user);
+    const newUser = await this.userService.update(user);
 
     return newUser;
   }
@@ -136,7 +134,7 @@ export class UserController {
     @Param('id', new ParseIntPipe())
     id: number
   ) {
-    const user = await this.userRepository.findOne(id);
+    const user = await this.userService.findById(id);
     if (!user) {
       throw new NotFoundException();
     }
@@ -180,7 +178,7 @@ export class UserController {
     const orderConfig = {};
     orderConfig[orderParts[0]] = orderParts[1].toUpperCase();
 
-    return this.userRepository.findWithFilter(
+    return this.userService.findWithFilter(
       orderConfig,
       limit,
       offset,

@@ -12,7 +12,7 @@
     "port": 5432,
     "username": "admin",
     "password": "l0c4lp4ss",
-    "database": "identity",
+    "database": "greendirect",
     "poolMax": 10,
     "ssl": false
   }

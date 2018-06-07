@@ -5,7 +5,8 @@ import {
   ManyToOne,
   JoinColumn,
   CreateDateColumn,
-  UpdateDateColumn
+  UpdateDateColumn,
+  OneToMany
 } from 'typeorm';
 import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
 import { Organization } from './organization.entity';
@@ -32,11 +33,9 @@ export class UserAddress {
   @Column('text', { nullable: true })
   public city: string;
 
-  /**
-   * The state to which this ID is tied. Provided by the Point-of-Sale (POS) system.
-   */
-  @Column('text', { nullable: true })
-  public state: string;
+  @ManyToOne(type => State, { eager: true, nullable: true })
+  @JoinColumn({ name: 'state_id' })
+  public state: State;
 
   @Column('text', { name: 'postal_code', nullable: true })
   public postalCode: string;

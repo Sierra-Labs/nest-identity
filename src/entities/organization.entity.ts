@@ -26,25 +26,6 @@ export class Organization {
   public description: string;
 
   /**
-   * Name of the contact at the organization.
-   */
-  @Column('text', { name: 'contact_name', nullable: true })
-  public contactName: string;
-
-  /**
-   * Email address of the contact at the organization.
-   */
-  @Column('citext', { name: 'contact_email', nullable: true })
-  @IsEmail()
-  public contactEmail: string;
-
-  /**
-   * Phone number of the contact at the organization.
-   */
-  @Column('text', { name: 'contact_phone', nullable: true })
-  public contactPhone: string;
-
-  /**
    * Organization primary street address.
    */
   @Column('text', { name: 'address_line_1', nullable: true })

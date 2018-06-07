@@ -24,13 +24,6 @@ export class UserPhone {
   public userId: number;
 
   /**
-   * The phone number identifier from the Point-of-Sale (POS) system
-   */
-  @ApiModelProperty()
-  @Column({ nullable: true })
-  public posId: number;
-
-  /**
    * The property of this phone number
    */
   @Column('text')
