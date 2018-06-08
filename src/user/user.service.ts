@@ -11,13 +11,13 @@ import { Repository } from 'typeorm';
 @Injectable()
 export class UserService {
 
-  private authService: AuthService;
+  // protected authService: AuthService;
 
   constructor(
     @InjectRepository(User)
-    private readonly userRepository: Repository<User>,
-    private readonly configService: ConfigService,
-    private readonly moduleRef: ModuleRef
+    protected readonly userRepository: Repository<User>,
+    protected readonly configService: ConfigService,
+    protected readonly authService: AuthService
   ) {}
 
   /**
@@ -25,7 +25,7 @@ export class UserService {
    */
   onModuleInit() {
     // Prevents circular dependency issue since AuthService also requires UserService
-    this.authService = this.moduleRef.get<AuthService>(AuthService);
+    // this.authService = this.moduleRef.get<AuthService>('AuthService');
   }
 
   public async findById(id: number): Promise<User> {

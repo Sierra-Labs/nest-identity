@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
 import { ConfigModule } from '@sierralabs/nest-utils';
@@ -8,6 +8,7 @@ import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
 import { RolesGuard } from '../roles/roles.guard';
 import { Connection } from 'typeorm';
+import { TestValidateStrategy } from '../auth/test-validate.strategy';
 
 const UserRepositoryProvider = {
   provide: 'UserRepository',
@@ -18,7 +19,7 @@ const UserRepositoryProvider = {
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-    forwardRef(() => AuthModule)
+    AuthModule.forRoot(TestValidateStrategy)
   ],
   providers: [UserService, RolesGuard, UserRepositoryProvider],
   controllers: [UserController],

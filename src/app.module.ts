@@ -3,6 +3,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { RolesGuard } from './roles/roles.guard';
 import { AuthModule } from './auth/auth.module';
+import { TestValidateStrategy } from './auth/test-validate.strategy';
 import {
   PostgresNamingStrategy,
   ConfigModule,
@@ -32,7 +33,7 @@ const config = configService.get('database') || {};
       // logging: 'all',
       namingStrategy: new PostgresNamingStrategy(),
     }),
-    AuthModule,
+    AuthModule.forRoot(TestValidateStrategy),
     UserModule
   ],
   controllers: [],

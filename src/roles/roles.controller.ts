@@ -9,7 +9,7 @@ import { Roles } from './roles.decorator';
 export class RolesController {
   constructor(
     @InjectRepository(Role)
-    private readonly roleRepository: Repository<Role>,
+    protected readonly roleRepository: Repository<Role>,
   ) {}
 
   @Roles('Admin')
