@@ -35,8 +35,12 @@ export class User {
   public lastName: string;
 
   @ApiModelProperty()
-  @Column()
+  @Column({ default: false })
   public verified: boolean = false; // tslint:disable-line
+
+  @ApiModelProperty()
+  @Column({ default: false })
+  public deleted: boolean = false; // tslint:disable-line
 
   @ApiModelPropertyOptional()
   @CreateDateColumn()

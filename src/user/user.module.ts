@@ -10,19 +10,13 @@ import { RolesGuard } from '../roles/roles.guard';
 import { Connection } from 'typeorm';
 import { TestValidateStrategy } from '../auth/test-validate.strategy';
 
-const UserRepositoryProvider = {
-  provide: 'UserRepository',
-  useFactory: (connection: Connection) => connection.getRepository(User),
-  inject: [Connection]
-};
-
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     AuthModule.forRoot(TestValidateStrategy)
   ],
-  providers: [UserService, RolesGuard, UserRepositoryProvider],
+  providers: [UserService],
   controllers: [UserController],
-  exports: [UserService, UserRepositoryProvider]
+  exports: [UserService]
 })
 export class UserModule {}

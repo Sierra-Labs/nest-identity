@@ -6,7 +6,7 @@ import * as bcrypt from 'bcryptjs';
 import { JwtToken } from '../auth/jwt-token.interface';
 import { AuthService } from '../auth/auth.service';
 import { ModuleRef } from '@nestjs/core';
-import { Repository } from 'typeorm';
+import { Repository, UpdateResult } from 'typeorm';
 
 @Injectable()
 export class UserService {
@@ -55,8 +55,8 @@ export class UserService {
 
   public async findWithFilter(
     order: any,
-    limit: number,
-    offset: number,
+    limit: number = 100,
+    offset: number = 0,
     filter: string
   ): Promise<User[]> {
     return this.userRepository.createQueryBuilder('user')
@@ -71,6 +71,18 @@ export class UserService {
       .limit(limit)
       .offset(offset)
       .getMany();
+  }
+
+  public async countWithFilter(filter: string): Promise<number> {
+    return this.userRepository.createQueryBuilder('user')
+      .where(
+        `(user.id)::text LIKE :filter OR
+        first_name LIKE :filter OR
+        last_name LIKE :filter OR
+        user.email LIKE :filter`,
+        { filter }
+      )
+      .getCount();
   }
 
   public async changePassword(user: User, password: string): Promise<User> {
@@ -105,6 +117,10 @@ export class UserService {
     throw new UnauthorizedException();
   }
 
+  public async logout() {
+      // TODO: invalidate the the JWT access token through a blacklist
+  }
+
   public async create(user: User): Promise<User> {
     delete user.id; // make sure no existing id exists when saving user
     return this.userRepository.save(user);
@@ -112,5 +128,9 @@ export class UserService {
 
   public async update(user: User): Promise<User> {
     return this.userRepository.save(user);
+  }
+
+  public async remove(id: number): Promise<UpdateResult> {
+    return this.userRepository.update({ id }, {deleted: true});
   }
 }

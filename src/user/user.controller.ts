@@ -7,7 +7,10 @@ import {
   Put,
   ParseIntPipe,
   NotFoundException,
-  HttpCode
+  HttpCode,
+  NotImplementedException,
+  Delete,
+  Req
 } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -24,6 +27,7 @@ import {
   ParseEntityPipe
 } from '@sierralabs/nest-utils';
 import { ModuleRef } from '@nestjs/core';
+import { UpdateResult } from 'typeorm';
 
 @Controller('users')
 export class UserController {
@@ -45,21 +49,20 @@ export class UserController {
     return this.userService.login(email, password);
   }
 
-  // @Roles('$authenticated')
-  // @Post('logout')
-  // @HttpCode(204)
-  // public async logout(
-  //   @RequestProperty('accessToken') accessToken: AccessToken
-  // ) {
-  //   this.accessTokenRepository.removeById(accessToken.id);
-  // }
+  @Roles('$authenticated')
+  @Post('logout')
+  @HttpCode(204)
+  public async logout() {
+    this.userService.logout();
+  }
 
   @Roles('Admin')
   @Post()
   public async create(
-    @Body(new RequiredPipe())
+    @Body('user', new RequiredPipe())
     user: User
   ): Promise<User> {
+    user.verified = true;
     user = await this.userService.changePassword(user, user.password);
     const newUser = await this.userService.create(user);
     return newUser;
@@ -68,9 +71,9 @@ export class UserController {
   @Roles('$everyone')
   @Post('register')
   public async register(
-    @Body(new RequiredPipe())
+    @Body('user', new RequiredPipe())
     user: User
-  ) {
+  ): Promise<User> {
     // new account created by the public should not have an id yet, nor should they be verified
     delete user.id;
     user.verified = false;
@@ -104,9 +107,15 @@ export class UserController {
       new RequiredPipe(),
       new ParseEntityPipe({ validate: { skipMissingProperties: true } })
     )
-    user: User
+    user: User,
+    @Req() request
   ) {
     user.id = id;
+
+    // $userOwner cannot update verified status
+    if (request.user.id === id) {
+      delete user.verified;
+    }
 
     // determine if sensitive data is changed
     const oldUser = await this.userService.findById(id);
@@ -128,6 +137,18 @@ export class UserController {
     return newUser;
   }
 
+  @Roles('Admin')
+  @Delete(':id([0-9]+)')
+  public async remove(@Param('id') id: number): Promise<UpdateResult> {
+    return this.userService.remove(id);
+  }
+
+  @Post(':id/verify/phone/:verificationCode')
+  @Roles('$userOwner')
+  public async verifyPhone(userId: number, verificationCode: string) {
+    return new NotImplementedException();
+  }
+
   @Roles('Admin', '$userOwner')
   @Get(':id([0-9]+|me)')
   public async getOne(
@@ -143,11 +164,11 @@ export class UserController {
 
   @Get()
   @Roles('Admin')
-  // @ApiImplicitQuery({ name: 'search', required: false, type:  })
-  // @ApiImplicitQuery({ name: 'page', required: false })
-  // @ApiImplicitQuery({ name: 'page', required: false })
-  // @ApiImplicitQuery({ name: 'limit', required: false })
-  // @ApiImplicitQuery({ name: 'order', required: false })
+  @ApiImplicitQuery({ name: 'search', required: false  })
+  @ApiImplicitQuery({ name: 'page', required: false })
+  @ApiImplicitQuery({ name: 'page', required: false })
+  @ApiImplicitQuery({ name: 'limit', required: false })
+  @ApiImplicitQuery({ name: 'order', required: false })
   public async getAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -184,6 +205,12 @@ export class UserController {
       offset,
       '%' + (search || '') + '%'
     );
+  }
+
+  @Get('count')
+  @Roles('Admin')
+  public async getCount(@Query('search') search?: string): Promise<number> {
+    return this.userService.countWithFilter(search);
   }
 
 }

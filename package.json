@@ -1,6 +1,6 @@
 {
   "name": "@sierralabs/nest-identity",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "description": "Standard user management, roles, authentication, and ACL handling.",
   "author": "Sierra Labs",
   "license": "MIT",
@@ -29,7 +29,7 @@
     "@nestjs/testing": "^5.0.0-beta.6",
     "@nestjs/typeorm": "^3.0.0",
     "@nestjs/websockets": "^5.0.0-beta.6",
-    "@sierralabs/nest-utils": "0.0.3",
+    "@sierralabs/nest-utils": "*",
     "@types/convict": "^4.2.0",
     "bcryptjs": "^2.4.3",
     "class-transformer": "^0.1.9",

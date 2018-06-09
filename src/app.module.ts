@@ -9,6 +9,7 @@ import {
   ConfigModule,
   ConfigService
 } from '@sierralabs/nest-utils';
+import { RolesModule } from 'roles';
 
 const configService = new ConfigService();
 const config = configService.get('database') || {};
@@ -29,14 +30,15 @@ const config = configService.get('database') || {};
         max: config.poolMax,
         ssl: config.ssl,
       },
-      synchronize: false,
-      // logging: 'all',
+      // synchronize: true,
+      logging: 'all',
       namingStrategy: new PostgresNamingStrategy(),
     }),
     AuthModule.forRoot(TestValidateStrategy),
+    RolesModule,
     UserModule
   ],
   controllers: [],
-  providers: [ RolesGuard ],
+  providers: [ ],
 })
 export class AppModule {}

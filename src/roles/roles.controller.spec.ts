@@ -4,34 +4,40 @@ import { UserModule } from '../user/user.module';
 import { RolesModule } from '../roles/roles.module';
 import { RolesController } from './roles.controller';
 import { Role } from '../entities/role.entity';
-import { Repository } from 'typeorm';
+import { RoleService } from '.';
+import { UnauthorizedException } from '@nestjs/common';
+
+function getRole(): Role {
+  const role = new Role();
+  role.id = 1;
+  role.name = 'Admin';
+  return role;
+}
 
 describe('RoleController', () => {
-  let rolesRepository: Repository<Role>;
+  let roleService: RoleService;
   let rolesController: RolesController;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [AppModule, UserModule, RolesModule],
+      imports: [AppModule]
     }).compile();
 
     rolesController = module.get<RolesController>(RolesController);
-    rolesRepository = module.get<Repository<Role>>('RoleRepository');
+    roleService = module.get<RoleService>(RoleService);
   });
 
-  xdescribe('create', () => {
-    it('should create a new role', async () => {
-      const role = new Role();
-      role.id = 1;
-      role.name = 'Admin';
-      jest.spyOn(rolesRepository, 'save').mockImplementation((entity: Role) => {
-        expect(entity.id).not.toHaveProperty('id');
-        entity.id = 1001;
-        return entity;
+  describe('create', () => {
+    it('should call roleService.create', async () => {
+      const role = getRole();
+      const spy = jest.spyOn(roleService, 'create').mockImplementation(
+        async (entity: Role) => {
+        return new UnauthorizedException();
       });
-      const newRole = rolesController.create(role);
-      expect(newRole).toHaveProperty('id', 1001);
+      rolesController.create(role);
+      expect(spy).toHaveBeenCalled();
     });
+
   });
 
 });

@@ -15,5 +15,5 @@ module.exports = {
     "^.+\\.(t|j)s$": "ts-jest"
   },
   "coverageDirectory": "../coverage",
-  "verbose": true
+  "verbose": false
 };

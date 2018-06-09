@@ -4,18 +4,14 @@ import { RolesGuard } from '../roles/roles.guard';
 import { Role } from '../entities/role.entity';
 import { RolesController } from './roles.controller';
 import { Connection, Repository } from 'typeorm';
-
-const RoleRepositoryProvider = {
-  provide: 'RoleRepository',
-  useFactory: (connection: Connection) => connection.getRepository(Role),
-  inject: [Connection]
-};
+import { RoleService } from './roles.service';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([Role])
   ],
-  providers: [RolesGuard, RoleRepositoryProvider],
-  controllers: [RolesController]
+  providers: [RoleService, RolesGuard],
+  controllers: [RolesController],
+  exports: [RoleService, RolesGuard]
 })
 export class RolesModule {}
