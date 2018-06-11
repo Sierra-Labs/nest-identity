@@ -22,11 +22,12 @@ describe('UserService', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [AppModule]
+      imports: [AppModule],
       }).compile();
 
     userRepository = module.get<Repository<User>>(getRepositoryToken(User));
     userService = module.get<UserService>(UserService);
+    userService.onModuleInit();
   });
 
   describe('findById', () => {
@@ -117,20 +118,32 @@ describe('UserService', () => {
       jest.clearAllMocks();
     });
     it('should login the user', async () => {
-      jest.spyOn(userService, 'findByEmail').mockImplementation(async (email: string) => {
-        let user = getUser();
-        user = await userService.changePassword(user, 'password');
-        return user;
-      });
+      userRepository.createQueryBuilder = jest.fn(() => ({
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        setParameters: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockImplementationOnce(async (email: string) => {
+          let user = getUser();
+          user = await userService.changePassword(user, 'password');
+          return user;
+        })
+      }));
       const jwtPayload = await userService.login('test@gmail.com', 'password');
       expect(jwtPayload).toHaveProperty('accessToken');
     });
     it('should fail to login the user when bad password', async () => {
-      jest.spyOn(userService, 'findByEmail').mockImplementation(async (email: string) => {
-        let user = getUser();
-        user = await userService.changePassword(user, 'password');
-        return user;
-      });
+      userRepository.createQueryBuilder = jest.fn(() => ({
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        setParameters: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockImplementationOnce(async (email: string) => {
+          let user = getUser();
+          user = await userService.changePassword(user, 'password');
+          return user;
+        })
+      }));
       try {
         await userService.login('test@gmail.com', 'wrong-password');
         throw new Error('failed to fail login');
@@ -139,9 +152,15 @@ describe('UserService', () => {
       }
     });
     it('should fail to login the user when bad email', async () => {
-      jest.spyOn(userService, 'findByEmail').mockImplementation(async (email: string) => {
-        return null;
-      });
+      userRepository.createQueryBuilder = jest.fn(() => ({
+        select: jest.fn().mockReturnThis(),
+        addSelect: jest.fn().mockReturnThis(),
+        where: jest.fn().mockReturnThis(),
+        setParameters: jest.fn().mockReturnThis(),
+        getRawOne: jest.fn().mockImplementationOnce(async (email: string) => {
+          return null;
+        })
+      }));
       try {
         await userService.login('test-bad@gmail.com', 'password');
         throw new Error('failed to fail login');

@@ -11,13 +11,14 @@ import { Repository, UpdateResult } from 'typeorm';
 @Injectable()
 export class UserService {
 
-  // protected authService: AuthService;
+  protected authService: AuthService;
 
   constructor(
     @InjectRepository(User)
     protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
-    protected readonly authService: AuthService
+    // protected readonly authService: AuthService,
+    protected readonly moduleRef: ModuleRef
   ) {}
 
   /**
@@ -25,7 +26,7 @@ export class UserService {
    */
   onModuleInit() {
     // Prevents circular dependency issue since AuthService also requires UserService
-    // this.authService = this.moduleRef.get<AuthService>('AuthService');
+    this.authService = this.moduleRef.get<AuthService>('AuthService');
   }
 
   public async findById(id: number): Promise<User> {
@@ -57,10 +58,20 @@ export class UserService {
     order: any,
     limit: number = 100,
     offset: number = 0,
-    filter: string
+    filter: string,
+    fields?: string[]
   ): Promise<User[]> {
-    return this.userRepository.createQueryBuilder('user')
-      .where(
+    const query = this.userRepository.createQueryBuilder('user');
+    // if (fields) {
+    //   query.select(fields);
+    // }
+    // query.addSelect('user.id', 'id');
+    // query.addSelect('user.email', 'email');
+    // query.addSelect('user.first_name', 'firstName');
+    // query.addSelect('user.last_name', 'lastName');
+    // query.addSelect('user.verified', 'verified');
+    // query.addSelect('user.deleted', 'deleted');
+    query.where(
         `(user.id)::text LIKE :filter OR
               first_name LIKE :filter OR
               last_name LIKE :filter OR
@@ -69,8 +80,8 @@ export class UserService {
       )
       .orderBy(order)
       .limit(limit)
-      .offset(offset)
-      .getMany();
+      .offset(offset);
+    return query.getMany();
   }
 
   public async countWithFilter(filter: string): Promise<number> {
@@ -98,8 +109,16 @@ export class UserService {
   }
 
   public async login(email: string, password: string): Promise<JwtToken> {
-    const user = await this.findByEmail(email);
-    if (!user /*|| !user.verified*/) {
+    const user = await this.userRepository.createQueryBuilder('user')
+      .select('id')
+      .addSelect('verified')
+      .addSelect('deleted')
+      .addSelect('password')
+      .where('user.email = :email')
+      .setParameters({ email })
+      .getRawOne();
+
+    if (!user || user.deleted /*|| !user.verified*/) {
       // TODO: verify user
 
       // arbitrary bcrypt.compare to prevent(?) timing attacks. Both good/bad paths take

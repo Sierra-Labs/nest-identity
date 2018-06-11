@@ -21,7 +21,7 @@ export class User {
   @IsEmail()
   public email: string;
 
-  @Column('varchar', { length: 256 })
+  @Column('varchar', { length: 256, select: false }) // omit password from regular select queries
   @Exclude({ toPlainOnly: true })
   @MinLength(8)
   public password: string;

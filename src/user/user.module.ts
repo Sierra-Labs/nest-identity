@@ -12,10 +12,9 @@ import { TestValidateStrategy } from '../auth/test-validate.strategy';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([User]),
-    AuthModule.forRoot(TestValidateStrategy)
+    TypeOrmModule.forFeature([User])
   ],
-  providers: [UserService],
+  providers: [UserService, AuthService],
   controllers: [UserController],
   exports: [UserService]
 })

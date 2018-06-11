@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module, forwardRef, RequestMethod, MiddlewareConsumer } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './user/user.module';
 import { RolesGuard } from './roles/roles.guard';
@@ -10,6 +10,9 @@ import {
   ConfigService
 } from '@sierralabs/nest-utils';
 import { RolesModule } from 'roles';
+import helmet = require('helmet');
+import { UserService } from 'user';
+import { User } from 'entities';
 
 const configService = new ConfigService();
 const config = configService.get('database') || {};
@@ -34,11 +37,21 @@ const config = configService.get('database') || {};
       logging: 'all',
       namingStrategy: new PostgresNamingStrategy(),
     }),
-    AuthModule.forRoot(TestValidateStrategy),
+    AuthModule.forRoot(TestValidateStrategy, [UserModule]),
     RolesModule,
     UserModule
   ],
   controllers: [],
-  providers: [ ],
+  providers: [],
 })
-export class AppModule {}
+export class AppModule {
+  configure(consumer: MiddlewareConsumer): void {
+    consumer
+      .apply([
+        // versionHeaderMiddleware,
+        // cookieParser(cookieConfig.secret),
+        helmet(),
+      ])
+      .forRoutes('*');
+  }
+}

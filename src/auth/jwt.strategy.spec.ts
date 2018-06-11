@@ -21,7 +21,7 @@ describe('JwtStrategy', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [AppModule, AuthModule.forRoot(TestValidateStrategy)]
+      imports: [AppModule, AuthModule.forRoot(TestValidateStrategy, [UserModule])]
     }).compile();
 
     jwtStrategy = module.get<JwtStrategy>(JwtStrategy);

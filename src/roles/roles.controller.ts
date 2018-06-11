@@ -3,8 +3,10 @@ import { Role } from '../entities/role.entity';
 import { RequiredPipe } from '@sierralabs/nest-utils';
 import { Roles } from './roles.decorator';
 import { RoleService } from './roles.service';
+import { ApiUseTags } from '@nestjs/swagger';
 
-@Controller('users/roles')
+@ApiUseTags('Roles')
+@Controller('roles')
 export class RolesController {
   constructor(
     protected readonly roleService: RoleService,

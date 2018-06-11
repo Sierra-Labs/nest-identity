@@ -1,6 +1,6 @@
 {
   "name": "@sierralabs/nest-identity",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "Standard user management, roles, authentication, and ACL handling.",
   "author": "Sierra Labs",
   "license": "MIT",
@@ -36,6 +36,7 @@
     "class-validator": "^0.8.5",
     "convict": "^4.2.0",
     "fastify-formbody": "^2.0.0",
+    "helmet": "^3.12.1",
     "jsonwebtoken": "^8.2.1",
     "lodash": "^4.17.10",
     "passport": "^0.4.0",

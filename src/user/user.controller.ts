@@ -18,7 +18,7 @@ import { UserService } from './user.service';
 import { Roles } from '../roles';
 import { AuthGuard } from '@nestjs/passport';
 import { JwtToken } from '../auth/jwt-token.interface';
-import { ApiImplicitBody, ApiImplicitQuery } from '@nestjs/swagger';
+import { ApiImplicitBody, ApiImplicitQuery, ApiUseTags, ApiBearerAuth } from '@nestjs/swagger';
 import { RolesGuard } from '../roles/roles.guard';
 import {
   ConfigService,
@@ -29,6 +29,8 @@ import {
 import { ModuleRef } from '@nestjs/core';
 import { UpdateResult } from 'typeorm';
 
+@ApiBearerAuth()
+@ApiUseTags('Users')
 @Controller('users')
 export class UserController {
 
@@ -37,14 +39,11 @@ export class UserController {
     protected readonly configService: ConfigService
   ) {}
 
-  // @ApiImplicitBody({ name: 'email', required: true, type: String })
-  // @ApiImplicitBody({ name: 'password', required: true, type: String })
+  @ApiImplicitBody({ name: 'login', required: true, type: Object }) // Swagger JSON object input (can use DTO for type)
   @Post('login')
   public async login(
-    @Body('email', new RequiredPipe())
-    email: string,
-    @Body('password', new RequiredPipe())
-    password: string
+    @Body('email') email: string,
+    @Body('password') password: string
   ): Promise<JwtToken> {
     return this.userService.login(email, password);
   }
@@ -203,7 +202,8 @@ export class UserController {
       orderConfig,
       limit,
       offset,
-      '%' + (search || '') + '%'
+      '%' + (search || '') + '%',
+      // ['user.id as id', 'email', 'first_name', 'last_name', 'verified', 'deleted']
     );
   }
 
