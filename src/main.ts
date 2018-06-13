@@ -5,6 +5,7 @@ import { ConfigService } from '@sierralabs/nest-utils';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
+  app.enableCors({ origin: '*' });
   const configService = new ConfigService();
   const port = configService.get('http.port') || 3000;
   const isExplorer = configService.get('api.explorer');
