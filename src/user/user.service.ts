@@ -3,6 +3,7 @@ import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@sierralabs/nest-utils';
 import * as bcrypt from 'bcryptjs';
+import _ from 'lodash';
 import { JwtToken } from '../auth/jwt-token.interface';
 import { AuthService } from '../auth/auth.service';
 import { ModuleRef } from '@nestjs/core';
@@ -33,13 +34,22 @@ export class UserService {
     return this.userRepository.findOne(id);
   }
 
-  public async findByEmail(email: string, fields?: string[]): Promise<User> {
+  public async findByEmail(email: string, options?): Promise<User> {
     const query = this.userRepository.createQueryBuilder('user');
 
-    if (fields) {
-      query.select('user.id');
-      for (const field of fields) {
-        query.addSelect(field);
+    if (options) {
+      if (options.selectPassword) {
+        query.addSelect('user.password');
+      }
+      if (options.fields) {
+        query.select('user.id', 'id');
+        for (const field of options.fields) {
+          if (_.isArray(field) && field.length === 2) {
+            query.addSelect(field[0], field[1]);
+          } else {
+            query.addSelect(field);
+          }
+        }
       }
     }
     query
@@ -47,7 +57,7 @@ export class UserService {
       .leftJoinAndSelect('user.roles', 'role')
       .where('user.email = :email')
       .setParameters({ email });
-    if (fields) {
+    if (options && options.fields) {
       return query.getRawOne();
     } else {
       return query.getOne();
@@ -109,17 +119,10 @@ export class UserService {
   }
 
   public async login(email: string, password: string): Promise<JwtToken> {
-    const user = await this.userRepository.createQueryBuilder('user')
-      .select('id')
-      .addSelect('verified')
-      .addSelect('deleted')
-      .addSelect('password')
-      .where('user.email = :email')
-      .setParameters({ email })
-      .getRawOne();
+    const user = await this.findByEmail(email, { selectPassword: true });
 
     if (!user || user.deleted /*|| !user.verified*/) {
-      // TODO: verify user
+      // TODO: check if user is email verified
 
       // arbitrary bcrypt.compare to prevent(?) timing attacks. Both good/bad paths take
       // roughly the same amount of time
@@ -131,7 +134,10 @@ export class UserService {
       throw new UnauthorizedException();
     }
     if (await bcrypt.compare(password, user.password)) {
-      return this.authService.createToken(user.id, email);
+      const jwtToken = await this.authService.createToken(user.id, email);
+      jwtToken.user = user;
+      delete jwtToken.user.password; // remove token password
+      return jwtToken;
     }
     throw new UnauthorizedException();
   }

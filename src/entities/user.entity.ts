@@ -12,7 +12,6 @@ export class User {
   @PrimaryGeneratedColumn()
   public id: number;
 
-  public roleType;
   /**
    * User email address for communication and login.
    */

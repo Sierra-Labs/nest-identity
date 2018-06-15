@@ -44,6 +44,7 @@ describe('UserService', () => {
   describe('findByEmail', () => {
     it('should find user record by email', async () => {
       const result = getUser();
+      delete result.password;
       userRepository.createQueryBuilder = jest.fn(() => ({
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),
@@ -54,6 +55,7 @@ describe('UserService', () => {
       }));
       const user = await userService.findByEmail('test@gmail.com');
       expect(user).toBe(result);
+      expect(user).not.toHaveProperty('password');
     });
     it('should find user record by email with limited fields', async () => {
       const result = { id: 1001, email: 'test@gmail.com' };
@@ -65,7 +67,7 @@ describe('UserService', () => {
         setParameters: jest.fn().mockReturnThis(),
         getRawOne: jest.fn().mockReturnValueOnce(result),
       }));
-      const user = await userService.findByEmail('test@gmail.com', ['user.email']);
+      const user = await userService.findByEmail('test@gmail.com', { fields: ['user.email'] });
       expect(user).toBe(result);
     });
   });
@@ -121,9 +123,10 @@ describe('UserService', () => {
       userRepository.createQueryBuilder = jest.fn(() => ({
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         setParameters: jest.fn().mockReturnThis(),
-        getRawOne: jest.fn().mockImplementationOnce(async (email: string) => {
+        getOne: jest.fn().mockImplementationOnce(async (email: string) => {
           let user = getUser();
           user = await userService.changePassword(user, 'password');
           return user;
@@ -131,14 +134,16 @@ describe('UserService', () => {
       }));
       const jwtPayload = await userService.login('test@gmail.com', 'password');
       expect(jwtPayload).toHaveProperty('accessToken');
+      expect(jwtPayload.user).not.toHaveProperty('password');
     });
     it('should fail to login the user when bad password', async () => {
       userRepository.createQueryBuilder = jest.fn(() => ({
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         setParameters: jest.fn().mockReturnThis(),
-        getRawOne: jest.fn().mockImplementationOnce(async (email: string) => {
+        getOne: jest.fn().mockImplementationOnce(async (email: string) => {
           let user = getUser();
           user = await userService.changePassword(user, 'password');
           return user;
@@ -155,9 +160,10 @@ describe('UserService', () => {
       userRepository.createQueryBuilder = jest.fn(() => ({
         select: jest.fn().mockReturnThis(),
         addSelect: jest.fn().mockReturnThis(),
+        leftJoinAndSelect: jest.fn().mockReturnThis(),
         where: jest.fn().mockReturnThis(),
         setParameters: jest.fn().mockReturnThis(),
-        getRawOne: jest.fn().mockImplementationOnce(async (email: string) => {
+        getOne: jest.fn().mockImplementationOnce(async (email: string) => {
           return null;
         })
       }));
