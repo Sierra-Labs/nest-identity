@@ -161,10 +161,11 @@ describe('UserControler', () => {
 
   describe('remove', () => {
     it('should call userService.remove', async () => {
-      const spy = jest.spyOn(userService, 'remove').mockImplementation(async (id: number) => {
+      const spy = jest.spyOn(userService, 'remove').mockImplementation(async (id: number, modifiedBy: number) => {
         return new UnauthorizedException();
       });
-      userController.remove(1001);
+      const request = { user: { id: 1 } };
+      userController.remove(1001, request);
       expect(spy).toHaveBeenCalled();
     });
   });

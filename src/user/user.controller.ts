@@ -1,8 +1,10 @@
 import {
   Controller,
   Body,
-  Post, Get,
-  Query, UseGuards,
+  Post,
+  Get,
+  Query,
+  UseGuards,
   Param,
   Put,
   ParseIntPipe,
@@ -10,40 +12,48 @@ import {
   HttpCode,
   NotImplementedException,
   Delete,
-  Req
+  Req,
+  UseInterceptors,
 } from '@nestjs/common';
 import { User } from '../entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
 import { UserService } from './user.service';
 import { Roles } from '../roles';
-import { AuthGuard } from '@nestjs/passport';
 import { JwtToken } from '../auth/jwt-token.interface';
-import { ApiImplicitBody, ApiImplicitQuery, ApiUseTags, ApiBearerAuth } from '@nestjs/swagger';
-import { RolesGuard } from '../roles/roles.guard';
+import {
+  ApiImplicitBody,
+  ApiImplicitQuery,
+  ApiUseTags,
+  ApiBearerAuth,
+} from '@nestjs/swagger';
 import {
   ConfigService,
   RequiredPipe,
   RequestProperty,
-  ParseEntityPipe
+  ParseEntityPipe,
 } from '@sierralabs/nest-utils';
-import { ModuleRef } from '@nestjs/core';
 import { UpdateResult } from 'typeorm';
+import { OwnerInterceptor } from './owner.interceptor';
 
 @ApiBearerAuth()
 @ApiUseTags('Users')
 @Controller('users')
 export class UserController {
-
   constructor(
     protected readonly userService: UserService,
-    protected readonly configService: ConfigService
+    protected readonly configService: ConfigService,
   ) {}
 
-  @ApiImplicitBody({ name: 'login', required: true, type: Object }) // Swagger JSON object input (can use DTO for type)
+  @ApiImplicitBody({
+    name: 'login',
+    required: true,
+    type: class {
+      new() {}
+    },
+  }) // Swagger JSON object input (can use DTO for type)
   @Post('login')
   public async login(
     @Body('email') email: string,
-    @Body('password') password: string
+    @Body('password') password: string,
   ): Promise<JwtToken> {
     return this.userService.login(email, password);
   }
@@ -57,9 +67,10 @@ export class UserController {
 
   @Roles('Admin')
   @Post()
+  @UseInterceptors(new OwnerInterceptor(['createdBy', 'modifiedBy']))
   public async create(
-    @Body('user', new RequiredPipe())
-    user: User
+    @Body(new RequiredPipe())
+    user: User,
   ): Promise<User> {
     user.verified = true;
     user = await this.userService.changePassword(user, user.password);
@@ -71,7 +82,7 @@ export class UserController {
   @Post('register')
   public async register(
     @Body('user', new RequiredPipe())
-    user: User
+    user: User,
   ): Promise<User> {
     // new account created by the public should not have an id yet, nor should they be verified
     delete user.id;
@@ -99,16 +110,17 @@ export class UserController {
 
   @Roles('Admin', '$userOwner')
   @Put(':id([0-9]+)')
+  @UseInterceptors(new OwnerInterceptor(['modifiedBy']))
   public async update(
     @Param('id', new ParseIntPipe())
     id: number,
     @Body(
       new RequiredPipe(),
-      new ParseEntityPipe({ validate: { skipMissingProperties: true } })
+      new ParseEntityPipe({ validate: { skipMissingProperties: true } }),
     )
     user: User,
-    @Req() request
-  ) {
+    @Req() request,
+  ): Promise<User> {
     user.id = id;
 
     // $userOwner cannot update verified status
@@ -138,8 +150,11 @@ export class UserController {
 
   @Roles('Admin')
   @Delete(':id([0-9]+)')
-  public async remove(@Param('id') id: number): Promise<UpdateResult> {
-    return this.userService.remove(id);
+  public async remove(
+    @Param('id') id: number,
+    @Req() request,
+  ): Promise<UpdateResult> {
+    return this.userService.remove(id, request.user.id);
   }
 
   @Post(':id/verify/phone/:verificationCode')
@@ -152,7 +167,7 @@ export class UserController {
   @Get(':id([0-9]+|me)')
   public async getOne(
     @Param('id', new ParseIntPipe())
-    id: number
+    id: number,
   ) {
     const user = await this.userService.findById(id);
     if (!user) {
@@ -163,7 +178,7 @@ export class UserController {
 
   @Get()
   @Roles('Admin')
-  @ApiImplicitQuery({ name: 'search', required: false  })
+  @ApiImplicitQuery({ name: 'search', required: false })
   @ApiImplicitQuery({ name: 'page', required: false })
   @ApiImplicitQuery({ name: 'page', required: false })
   @ApiImplicitQuery({ name: 'limit', required: false })
@@ -172,10 +187,11 @@ export class UserController {
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('order') order?: string,
-    @Query('search') search?: string
+    @Query('search') search?: string,
   ) {
     const maxSize = this.configService.get('pagination.maxPageSize') || 200;
-    const defaultSize = this.configService.get('pagination.defaultPageSize') || 100;
+    const defaultSize =
+      this.configService.get('pagination.defaultPageSize') || 100;
     limit = Math.min(maxSize, limit || defaultSize);
     const offset = (page || 0) * limit;
 
@@ -188,7 +204,7 @@ export class UserController {
       'email asc',
       'email desc',
       'created asc',
-      'created desc'
+      'created desc',
     ];
 
     if (orderOptions.indexOf(order) === -1) {
@@ -212,5 +228,4 @@ export class UserController {
   public async getCount(@Query('search') search?: string): Promise<number> {
     return this.userService.countWithFilter(search);
   }
-
 }

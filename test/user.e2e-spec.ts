@@ -6,7 +6,6 @@ import { UserModule } from '../src/user/user.module';
 import { RolesGuard } from '../src/roles/roles.guard';
 import supertest from 'supertest';
 import { JwtToken } from '../src/auth/jwt-token.interface';
-import { UserRepository, UserRepositoryProvider } from '../src/user/user.repository';
 import { User } from '../src/entities/user.entity';
 import { UserController } from '../src/user/user.controller';
 import { UserService } from '../src/user/user.service';

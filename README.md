@@ -55,11 +55,11 @@ The following is the recommended folder structure for your source files:
   * `roles.controller.ts` - roles controller that extends the nest-identity roles.controller
 
 
-### User Entities
+### User and Role Entities
 
-The first step is to make sure you have your `User` entity and related entity models defined and have them extend `nest-identity` built in entities where applicable. You can then extend and add additional properties as needed.
+The first step is to make sure you have your `User` and `Role` entities models defined and have them extend `nest-identity` built in entities where applicable. You can then extend and add additional properties as needed.
 
-```javascript
+```typescript
 // entities/user.entity.ts
 import { Entity, Column } from 'typeorm';
 import { ApiModelProperty } from '@nestjs/swagger';
@@ -82,7 +82,20 @@ export class User extends BaseUser {
    */
   @ReplaceRelationType(type => Role)
   public roles: Role[];
+}
+```
 
+```typescript
+// entities/role.entity.ts
+import { Entity } from 'typeorm';
+import { User } from './user.entity';
+import { Role as BaseRole } from '@sierralabs/nest-identity';
+import { ReplaceRelationType } from '@sierralabs/nest-utils';
+
+@Entity()
+export class Role extends BaseRole {
+  @ReplaceRelationType(type => User)
+  public users: User[];
 }
 ```
 
@@ -220,6 +233,24 @@ The following are special keywords:
     return user;
   }
 ```
+
+## OwnerInterceptor
+
+The `OwnerInterceptor` is used to assign the requester's user id to any property in a model usually when used with a `POST` or `PUT` API request. For example, if you wanted to set the `createdBy` and/or `modifiedBy` fields when saving the user profile.
+
+```typescript
+  @Roles('Admin')
+  @Post()
+  @UseInterceptors(new OwnerInterceptor(['createdBy', 'modifiedBy']))
+  public async create(
+    @Body(new RequiredPipe())
+    user: User,
+  ): Promise<User> {
+    return await this.userService.create(user);
+  }
+```
+
+> `QwnerInterceptor` will throw an error if `request.user` is empty.
 
 ## User Controller
 

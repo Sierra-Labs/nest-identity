@@ -11,15 +11,13 @@ import { Repository, UpdateResult } from 'typeorm';
 
 @Injectable()
 export class UserService {
-
   protected authService: AuthService;
 
   constructor(
-    @InjectRepository(User)
-    protected readonly userRepository: Repository<User>,
+    @InjectRepository(User) protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
     // protected readonly authService: AuthService,
-    protected readonly moduleRef: ModuleRef
+    protected readonly moduleRef: ModuleRef,
   ) {}
 
   /**
@@ -34,7 +32,18 @@ export class UserService {
     return this.userRepository.findOne(id);
   }
 
-  public async findByEmail(email: string, options?): Promise<User> {
+  /**
+   * Look up a `User` record by `email` address. Additional configuration can be provided
+   * through the `options` parameter.
+   * @param email The email address to look up.
+   * @param options The options configuration.
+   * @param options.selectPassword Set this flag to enable the password field to be returned.
+   * @param options.fields An array of strings for custom field selection.
+   */
+  public async findByEmail(
+    email: string,
+    options?: { selectPassword?: boolean; fields?: string[] },
+  ): Promise<User> {
     const query = this.userRepository.createQueryBuilder('user');
 
     if (options) {
@@ -69,7 +78,7 @@ export class UserService {
     limit: number = 100,
     offset: number = 0,
     filter: string,
-    fields?: string[]
+    fields?: string[],
   ): Promise<User[]> {
     const query = this.userRepository.createQueryBuilder('user');
     // if (fields) {
@@ -81,12 +90,13 @@ export class UserService {
     // query.addSelect('user.last_name', 'lastName');
     // query.addSelect('user.verified', 'verified');
     // query.addSelect('user.deleted', 'deleted');
-    query.where(
+    query
+      .where(
         `(user.id)::text LIKE :filter OR
               first_name LIKE :filter OR
               last_name LIKE :filter OR
               user.email LIKE :filter`,
-        { filter }
+        { filter },
       )
       .orderBy(order)
       .limit(limit)
@@ -95,13 +105,14 @@ export class UserService {
   }
 
   public async countWithFilter(filter: string): Promise<number> {
-    return this.userRepository.createQueryBuilder('user')
+    return this.userRepository
+      .createQueryBuilder('user')
       .where(
         `(user.id)::text LIKE :filter OR
         first_name LIKE :filter OR
         last_name LIKE :filter OR
         user.email LIKE :filter`,
-        { filter }
+        { filter },
       )
       .getCount();
   }
@@ -128,7 +139,7 @@ export class UserService {
       // roughly the same amount of time
       await bcrypt.compare(
         '1234567890',
-        '$2a$14$x.V6i0bmERvdde/UJ/Fk3u41fIqDVMrn0VDP6JDIzbAShOFQqZ9PW'
+        '$2a$14$x.V6i0bmERvdde/UJ/Fk3u41fIqDVMrn0VDP6JDIzbAShOFQqZ9PW',
       );
 
       throw new UnauthorizedException();
@@ -143,7 +154,7 @@ export class UserService {
   }
 
   public async logout() {
-      // TODO: invalidate the the JWT access token through a blacklist
+    // TODO: invalidate the the JWT access token through a blacklist
   }
 
   public async create(user: User): Promise<User> {
@@ -152,10 +163,11 @@ export class UserService {
   }
 
   public async update(user: User): Promise<User> {
+    delete user.createdBy; // don't save the createdBy field
     return this.userRepository.save(user);
   }
 
-  public async remove(id: number): Promise<UpdateResult> {
-    return this.userRepository.update({ id }, {deleted: true});
+  public async remove(id: number, modifiedBy: number): Promise<UpdateResult> {
+    return this.userRepository.update({ id }, { deleted: true, modifiedBy });
   }
 }
