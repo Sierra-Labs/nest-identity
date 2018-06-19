@@ -158,8 +158,33 @@ export class UserService {
   }
 
   public async create(user: User): Promise<User> {
+    user.verified = true;
+    if (user.password) {
+      user = await this.changePassword(user, user.password);
+    }
     delete user.id; // make sure no existing id exists when saving user
     return this.userRepository.save(user);
+  }
+
+  public async register(user: User): Promise<User> {
+    // new account created by the public should not have an id yet, nor should they be verified
+    delete user.id;
+    user.verified = false;
+    if (user.password) {
+      user = await this.changePassword(user, user.password);
+    }
+    const newUser = this.userRepository.save(user);
+
+    // TODO: Impelement email delivery
+    // const fromEmail = await this.configService.get('email.from');
+    // await this.emailService.sendTemplate(
+    //   fromEmail,
+    //   newUser.email,
+    //   'Welcome Subject',
+    //   'welcome',
+    //   { name: newUser.username }
+    // );
+    return newUser;
   }
 
   public async update(user: User): Promise<User> {

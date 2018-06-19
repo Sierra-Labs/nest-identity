@@ -4,7 +4,7 @@ import { UserModule } from '../user/user.module';
 import { RolesModule } from '../roles/roles.module';
 import { RolesController } from './roles.controller';
 import { Role } from '../entities/role.entity';
-import { RoleService } from '.';
+import { RolesService } from '.';
 import { UnauthorizedException } from '@nestjs/common';
 
 function getRole(): Role {
@@ -15,7 +15,7 @@ function getRole(): Role {
 }
 
 describe('RoleController', () => {
-  let roleService: RoleService;
+  let rolesService: RoleService;
   let rolesController: RolesController;
 
   beforeAll(async () => {
@@ -24,13 +24,13 @@ describe('RoleController', () => {
     }).compile();
 
     rolesController = module.get<RolesController>(RolesController);
-    roleService = module.get<RoleService>(RoleService);
+    rolesService = module.get<RolesService>(RolesService);
   });
 
   describe('create', () => {
     it('should call roleService.create', async () => {
       const role = getRole();
-      const spy = jest.spyOn(roleService, 'create').mockImplementation(
+      const spy = jest.spyOn(rolesService, 'create').mockImplementation(
         async (entity: Role) => {
         return new UnauthorizedException();
       });

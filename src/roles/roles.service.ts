@@ -4,7 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
-export class RoleService {
+export class RolesService {
 
   constructor(
     @InjectRepository(Role)
@@ -14,5 +14,13 @@ export class RoleService {
   public async create(role: Role): Promise<Role> {
     delete role.id; // make sure no existing id exists when saving user
     return this.roleRepository.save(role);
+  }
+
+  public async findByName(name: string): Promise<Role> {
+    return this.roleRepository
+    .createQueryBuilder('role')
+    .where('role.name = :name')
+    .setParameters({ name })
+    .getOne();
   }
 }

@@ -66,30 +66,18 @@ describe('UserControler', () => {
   });
 
   describe('create', () => {
-    let newUser: User;
-
     it('should create a verified user', async () => {
-      jest.spyOn(userService, 'create').mockImplementation(async (entity: User) => {
-        newUser = Object.assign({}, entity);
-        newUser.id = 1001;
-        return newUser;
-      });
-      newUser = await userController.create(user);
-      expect(newUser).toHaveProperty('verified', true);
-      expect(newUser).toHaveProperty('id', 1001);
-    });
-
-    it('should return encrypted password for new user', () => {
-      expect(newUser.password.indexOf('$2a$')).toBe(0);
-      expect(newUser.password).toHaveLength(60);
+      const spy = jest.spyOn(userService, 'create').mockImplementation((entity: User) => user);
+      await userController.create(user);
+      expect(spy).toHaveBeenCalled();
     });
 
     it('should fail if creating a user with the same email address', async () => {
       jest.spyOn(userService, 'create').mockImplementation(async (entity: User) => {
-        throw new  QueryFailedError('mock query', undefined, Error('duplicate key value violates unique constraint "user__email__uq"'));
+        throw new QueryFailedError('mock query', undefined, Error('duplicate key value violates unique constraint "user__email__uq"'));
       });
       try {
-        await userController.register(user);
+        await userController.create(user);
         throw new Error('create failed to fail');
       } catch (e) {
         expect(e.message).toMatch('duplicate key value violates unique constraint "user__email__uq"');
@@ -98,26 +86,15 @@ describe('UserControler', () => {
   });
 
   describe('register', () => {
-    let newUser: User;
 
     it('should register (create) an unverified user', async () => {
-      jest.spyOn(userService, 'create').mockImplementation(async (entity: User) => {
-        newUser = Object.assign({}, entity);
-        newUser.id = 1001;
-        return newUser;
-      });
-      newUser = await userController.register(user);
-      expect(newUser).toHaveProperty('verified', false);
-      expect(newUser).toHaveProperty('id', 1001);
-    });
-
-    it('should return encrypted password for new user', () => {
-      expect(newUser.password.indexOf('$2a$')).toBe(0);
-      expect(newUser.password).toHaveLength(60);
+      const spy = jest.spyOn(userService, 'register').mockImplementation(async (entity: User) => user);
+      await userController.register(user);
+      expect(spy).toHaveBeenCalled();
     });
 
     it('should fail if creating a user with the same email address', async () => {
-      jest.spyOn(userService, 'create').mockImplementation(async (entity: User) => {
+      jest.spyOn(userService, 'register').mockImplementation(async (entity: User) => {
         throw new  QueryFailedError('mock query', undefined, Error('duplicate key value violates unique constraint "user__email__uq"'));
       });
       try {

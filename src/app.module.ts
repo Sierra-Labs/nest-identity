@@ -45,13 +45,5 @@ const config = configService.get('database') || {};
   providers: [],
 })
 export class AppModule {
-  configure(consumer: MiddlewareConsumer): void {
-    consumer
-      .apply([
-        // versionHeaderMiddleware,
-        // cookieParser(cookieConfig.secret),
-        helmet(),
-      ])
-      .forRoutes('*');
-  }
+
 }

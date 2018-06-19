@@ -17,7 +17,7 @@ import {
 } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import { UserService } from './user.service';
-import { Roles } from '../roles';
+import { Roles, RolesGuard } from '../roles';
 import { JwtToken } from '../auth/jwt-token.interface';
 import {
   ApiImplicitBody,
@@ -72,10 +72,7 @@ export class UserController {
     @Body(new RequiredPipe())
     user: User,
   ): Promise<User> {
-    user.verified = true;
-    user = await this.userService.changePassword(user, user.password);
-    const newUser = await this.userService.create(user);
-    return newUser;
+    return await this.userService.create(user);
   }
 
   @Roles('$everyone')
@@ -84,28 +81,8 @@ export class UserController {
     @Body('user', new RequiredPipe())
     user: User,
   ): Promise<User> {
-    // new account created by the public should not have an id yet, nor should they be verified
-    delete user.id;
-    user.verified = false;
-
-    if (user.password) {
-      user = await this.userService.changePassword(user, user.password);
-    }
-
     // try/catch to catch unique key failure, etc
-    const newUser = await this.userService.create(user);
-
-    // TODO: Imeplement email delivery
-    // const fromEmail = await this.configService.get('email.from');
-    // await this.emailService.sendTemplate(
-    //   fromEmail,
-    //   newUser.email,
-    //   'Welcome Subject',
-    //   'welcome',
-    //   { name: newUser.username }
-    // );
-
-    return newUser;
+   return await this.userService.register(user);
   }
 
   @Roles('Admin', '$userOwner')
@@ -179,7 +156,6 @@ export class UserController {
   @Get()
   @Roles('Admin')
   @ApiImplicitQuery({ name: 'search', required: false })
-  @ApiImplicitQuery({ name: 'page', required: false })
   @ApiImplicitQuery({ name: 'page', required: false })
   @ApiImplicitQuery({ name: 'limit', required: false })
   @ApiImplicitQuery({ name: 'order', required: false })

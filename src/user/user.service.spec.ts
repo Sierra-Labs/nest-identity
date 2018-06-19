@@ -199,7 +199,32 @@ describe('UserService', () => {
         return entity;
       });
       newUser = await userService.create(user);
+      expect(newUser).toHaveProperty('verified', true);
       expect(newUser).toHaveProperty('id', 1001);
+    });
+    it('should return encrypted password for new user', () => {
+      expect(newUser.password.indexOf('$2a$')).toBe(0);
+      expect(newUser.password).toHaveLength(60);
+    });
+  });
+
+  describe('register', () => {
+    let newUser: User;
+    it ('should register (create) an unverified user', async () => {
+      const user = getUser();
+      jest.spyOn(userRepository, 'save').mockImplementation(async (entity: User) => {
+        expect(entity).not.toHaveProperty('id');
+        entity.id = 1001;
+        entity.verified = false;
+        return entity;
+      });
+      newUser = await userService.create(user);
+      expect(newUser).toHaveProperty('verified', false);
+      expect(newUser).toHaveProperty('id', 1001);
+    });
+    it('should return encrypted password for new user', () => {
+      expect(newUser.password.indexOf('$2a$')).toBe(0);
+      expect(newUser.password).toHaveLength(60);
     });
   });
 
@@ -216,7 +241,7 @@ describe('UserService', () => {
     it('should call userRepository.update', async () => {
       const user = getUser();
       const spy = jest.spyOn(userRepository, 'update').mockImplementation(async (criteria, attributes) => user);
-      userService.remove(1001);
+      userService.remove(1001, 9);
       expect(spy).toHaveBeenCalled();
     });
   });
