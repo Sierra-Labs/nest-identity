@@ -12,10 +12,10 @@ export class RolesController {
     protected readonly rolesService: RolesService,
   ) {}
 
-  @Roles('Admin')
-  @Post()
-  create(@Body(new RequiredPipe()) role: Role): Promise<Role> {
-    return this.rolesService.create(role);
-  }
+  // @Roles('Admin')
+  // @Post()
+  // create(@Body(new RequiredPipe()) role: Role): Promise<Role> {
+  //   return this.rolesService.create(role);
+  // }
 
 }

@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@sierralabs/nest-utils';
@@ -29,6 +29,7 @@ export class UserService {
   }
 
   public async findById(id: number): Promise<User> {
+    if (!id) throw new BadRequestException('id not provided');
     return this.userRepository.findOne(id);
   }
 

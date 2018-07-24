@@ -1,12 +1,17 @@
-import { CanActivate, ExecutionContext, Injectable, UnprocessableEntityException } from '@nestjs/common';
+import {
+  CanActivate,
+  ExecutionContext,
+  Injectable,
+  UnprocessableEntityException,
+} from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { User } from '../entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 
 @Injectable()
-export class RolesGuard extends (AuthGuard('jwt') as { new(): any; }) implements CanActivate {
-
+export class RolesGuard extends (AuthGuard('jwt') as { new (): any })
+  implements CanActivate {
   constructor(private readonly reflector: Reflector) {
     super();
   }
@@ -54,7 +59,7 @@ export class RolesGuard extends (AuthGuard('jwt') as { new(): any; }) implements
   private async checkRole(
     role: string,
     user: User,
-    request: Request
+    request: Request,
   ): Promise<boolean> {
     let retval = false;
     switch (role) {

@@ -75,22 +75,27 @@ export class UserController {
     return await this.userService.create(user);
   }
 
-  @Roles('$everyone')
+  @ApiImplicitBody({
+    name: 'user',
+    required: true,
+    type: class {
+      new() {}
+    },
+  }) // Swagger JSON object input (can use DTO for type)  @Roles('$everyone')
   @Post('register')
   public async register(
-    @Body('user', new RequiredPipe())
+    @Body(new RequiredPipe())
     user: User,
   ): Promise<User> {
     // try/catch to catch unique key failure, etc
-   return await this.userService.register(user);
+    return await this.userService.register(user);
   }
 
   @Roles('Admin', '$userOwner')
-  @Put(':id([0-9]+)')
+  @Put(':id([0-9]+|me)')
   @UseInterceptors(new OwnerInterceptor(['modifiedBy']))
   public async update(
-    @Param('id', new ParseIntPipe())
-    id: number,
+    @Param('id') id: number | string,
     @Body(
       new RequiredPipe(),
       new ParseEntityPipe({ validate: { skipMissingProperties: true } }),
@@ -98,7 +103,10 @@ export class UserController {
     user: User,
     @Req() request,
   ): Promise<User> {
-    user.id = id;
+    if (!id || id === 'me') {
+      id = request.user.id;
+    }
+    user.id = id as number;
 
     // $userOwner cannot update verified status
     if (request.user.id === id) {
@@ -106,12 +114,14 @@ export class UserController {
     }
 
     // determine if sensitive data is changed
-    const oldUser = await this.userService.findById(id);
+    const oldUser = await this.userService.findById(id as number);
     if (user.email && user.email !== oldUser.email) {
       user.verified = false;
     }
-    if (user.password) {
+    if (user.password && user.password.length > 1) {
       user = await this.userService.changePassword(user, user.password);
+    } else {
+      delete user.password;
     }
 
     // create media if necessary
@@ -142,11 +152,11 @@ export class UserController {
 
   @Roles('Admin', '$userOwner')
   @Get(':id([0-9]+|me)')
-  public async getOne(
-    @Param('id', new ParseIntPipe())
-    id: number,
-  ) {
-    const user = await this.userService.findById(id);
+  public async getOne(@Param('id') id: number | string, @Req() request) {
+    if (!id || id === 'me') {
+      id = request.user.id; // return current user info
+    }
+    const user = await this.userService.findById(id as number);
     if (!user) {
       throw new NotFoundException();
     }
