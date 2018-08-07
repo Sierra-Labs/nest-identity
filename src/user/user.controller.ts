@@ -144,12 +144,6 @@ export class UserController {
     return this.userService.remove(id, request.user.id);
   }
 
-  @Post(':id/verify/phone/:verificationCode')
-  @Roles('$userOwner')
-  public async verifyPhone(userId: number, verificationCode: string) {
-    return new NotImplementedException();
-  }
-
   @Roles('Admin', '$userOwner')
   @Get(':id([0-9]+|me)')
   public async getOne(@Param('id') id: number | string, @Req() request) {
