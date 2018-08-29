@@ -110,7 +110,8 @@ export class UserController {
   @Put(':id([0-9]+)')
   @UseInterceptors(new OwnerInterceptor(['modifiedBy']))
   public async update(
-    @Param('id') id: number,
+    @Param('id', new ParseIntPipe())
+    id: number,
     @Body(
       new RequiredPipe(),
       new ParseEntityPipe({ validate: { skipMissingProperties: true } }),
