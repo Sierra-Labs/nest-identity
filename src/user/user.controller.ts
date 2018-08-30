@@ -92,10 +92,9 @@ export class UserController {
   }
 
   @Roles('Admin', '$userOwner')
-  @Put(':id([0-9]+|me)')
+  @Put('me')
   @UseInterceptors(new OwnerInterceptor(['modifiedBy']))
-  public async update(
-    @Param('id') id: number | string,
+  public async updateMe(
     @Body(
       new RequiredPipe(),
       new ParseEntityPipe({ validate: { skipMissingProperties: true } }),
@@ -103,10 +102,24 @@ export class UserController {
     user: User,
     @Req() request,
   ): Promise<User> {
-    if (!id || id === 'me') {
-      id = request.user.id;
-    }
-    user.id = id as number;
+    user.id = Number(request.user.id);
+    return this.update(user.id, user, request);
+  }
+
+  @Roles('Admin', '$userOwner')
+  @Put(':id([0-9]+)')
+  @UseInterceptors(new OwnerInterceptor(['modifiedBy']))
+  public async update(
+    @Param('id', new ParseIntPipe())
+    id: number,
+    @Body(
+      new RequiredPipe(),
+      new ParseEntityPipe({ validate: { skipMissingProperties: true } }),
+    )
+    user: User,
+    @Req() request,
+  ): Promise<User> {
+    user.id = id;
 
     // $userOwner cannot update verified status
     if (request.user.id === id) {
