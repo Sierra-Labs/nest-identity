@@ -1,4 +1,4 @@
-import * as bcrypt from 'bcryptjs';
+import * as bcrypt from 'bcrypt';
 import _ from 'lodash';
 import { Repository, UpdateResult } from 'typeorm';
 
