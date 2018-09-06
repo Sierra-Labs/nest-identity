@@ -1,13 +1,19 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
-import { User } from '../entities/user.entity';
-import { InjectRepository } from '@nestjs/typeorm';
-import { ConfigService } from '@sierralabs/nest-utils';
 import * as bcrypt from 'bcryptjs';
 import _ from 'lodash';
-import { JwtToken } from '../auth/jwt-token.interface';
-import { AuthService } from '../auth/auth.service';
-import { ModuleRef } from '@nestjs/core';
 import { Repository, UpdateResult } from 'typeorm';
+
+import {
+  BadRequestException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
+import { ModuleRef } from '@nestjs/core';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@sierralabs/nest-utils';
+
+import { AuthService } from '../auth/auth.service';
+import { JwtToken } from '../auth/jwt-token.interface';
+import { User } from '../entities/user.entity';
 
 @Injectable()
 export class UserService {
@@ -189,6 +195,7 @@ export class UserService {
   }
 
   public async update(user: User): Promise<User> {
+    user.id = Number(user.id); // force id to be a number
     delete user.createdBy; // don't save the createdBy field
     return this.userRepository.save(user);
   }
