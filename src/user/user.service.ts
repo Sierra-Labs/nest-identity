@@ -86,7 +86,7 @@ export class UserService {
     offset: number = 0,
     filter: string,
     fields?: string[],
-  ): Promise<User[]> {
+  ): Promise<[User[], number]> {
     const query = this.userRepository.createQueryBuilder('user');
     // if (fields) {
     //   query.select(fields);
@@ -108,7 +108,9 @@ export class UserService {
       .orderBy(order)
       .limit(limit)
       .offset(offset);
-    return query.getMany();
+    const count = await query.getCount();
+    const users = await query.getMany();
+    return new Promise<[User[], number]>(resolve => resolve([users, count]));
   }
 
   public async countWithFilter(filter: string): Promise<number> {
