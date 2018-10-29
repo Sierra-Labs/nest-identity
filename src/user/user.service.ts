@@ -36,7 +36,9 @@ export class UserService {
 
   public async findById(id: number): Promise<User> {
     if (!id) throw new BadRequestException('id not provided');
-    return this.userRepository.findOne(id);
+    return this.userRepository.findOne({
+      where: { deleted: false, id },
+    });
   }
 
   /**
@@ -99,10 +101,11 @@ export class UserService {
     // query.addSelect('user.deleted', 'deleted');
     query
       .where(
-        `(user.id)::text LIKE :filter OR
-              first_name LIKE :filter OR
-              last_name LIKE :filter OR
-              user.email LIKE :filter`,
+        `user.deleted = false AND
+        ((user.id)::text LIKE :filter OR
+        first_name LIKE :filter OR
+        last_name LIKE :filter OR
+        user.email LIKE :filter)`,
         { filter },
       )
       .orderBy(order)
@@ -117,10 +120,11 @@ export class UserService {
     return this.userRepository
       .createQueryBuilder('user')
       .where(
-        `(user.id)::text LIKE :filter OR
+        `user.deleted = false AND
+        ((user.id)::text LIKE :filter OR
         first_name LIKE :filter OR
         last_name LIKE :filter OR
-        user.email LIKE :filter`,
+        user.email LIKE :filter)`,
         { filter },
       )
       .getCount();
