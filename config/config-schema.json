@@ -78,5 +78,23 @@
       "format": "Boolean",
       "default": true
     }
+  },
+  "superadmin": {
+    "autoCreate": {
+      "format": "Boolean",
+      "default": true
+    },
+    "defaultEmail": {
+      "format": "String",
+      "default": "super@admin.com"
+    },
+    "defaultPassword": {
+      "format": "String",
+      "default": "admin"
+    },
+    "defaultRole": {
+      "format": "String",
+      "default": "superadmin"
+    }
   }
 }

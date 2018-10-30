@@ -6,6 +6,7 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  OnModuleInit,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,16 +15,18 @@ import { ConfigService } from '@sierralabs/nest-utils';
 import { AuthService } from '../auth/auth.service';
 import { JwtToken } from '../auth/jwt-token.interface';
 import { User } from '../entities/user.entity';
+import { RolesService } from '../roles/roles.service';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   protected authService: AuthService;
+  private logger = console;
 
   constructor(
     @InjectRepository(User) protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
-    // protected readonly authService: AuthService,
     protected readonly moduleRef: ModuleRef,
+    protected readonly rolesService: RolesService,
   ) {}
 
   /**
@@ -32,6 +35,42 @@ export class UserService {
   onModuleInit() {
     // Prevents circular dependency issue since AuthService also requires UserService
     this.authService = this.moduleRef.get<AuthService>('AuthService');
+    this.initialize();
+  }
+
+  public async initialize() {
+    let saConfig: any;
+    try {
+      saConfig = await this.configService.get('superadmin');
+    } catch (error) {
+      saConfig = { autoCreate: true };
+    }
+    if (saConfig.autoCreate) {
+      await this.rolesService.initializeRoles(saConfig.defaultRole); // ensure the roles are initialized first
+      this.logger.log('Initializing Users...');
+      const count = await this.userRepository.count();
+      if (count <= 0) {
+        this.logger.log('No users defined yet, creating superadmin user...');
+        const role = await this.rolesService.findByName(
+          saConfig.defaultRole || 'superadmin',
+        );
+        const superadmin = await this.create({
+          id: 1,
+          email: saConfig.defaultEmail || 'super@admin.com',
+          password: saConfig.defaultPassword || 'superadmin',
+          firstName: 'Super',
+          lastName: 'Admin',
+          verified: true,
+          roles: [role],
+          deleted: false,
+          created: new Date(),
+          createdBy: null,
+          modified: new Date(),
+          modifiedBy: null,
+        });
+        this.logger.log('Super Admin user created', superadmin);
+      }
+    }
   }
 
   public async findById(id: number): Promise<User> {

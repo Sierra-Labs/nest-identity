@@ -4,7 +4,7 @@
   },
   "jwt": {
     "secret": "my-secet",
-    "expiresIn" : "1y"
+    "expiresIn": "1y"
   },
   "api": {
     "basePath": "",
@@ -45,12 +45,17 @@
       }
     }
   },
-  "pagination" : {
+  "pagination": {
     "defaultPageSize": 100,
     "maxPageSize": 200
   },
   "password": {
     "rounds": 14
+  },
+  "superadmin": {
+    "autoCreate": true,
+    "defaultEmail": "super@admin.com",
+    "defaultPassword": "superadmin",
+    "defaultRole": "superadmin"
   }
 }
-
