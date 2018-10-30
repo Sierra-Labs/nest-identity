@@ -28,6 +28,10 @@ The following are configuration parameters to be used as environment variables o
 - `pagination.maxPageSize` - when querying a list of records limit the number of records returned (defaults to 200).
 - `pagination.defaultPageSize` - when querying a list of records limit the number of records returned by default (defaults to 100).
 - `password.rounds` - Number of bcrypt rounds to use, defaults to 10 if omitted.
+- `superadmin.autoCreate` - Set to false to prevent a superadmin role to be created during start up. Defaults to true.
+- `superadmin.defaultEmail` - Override the default email address of the superadmin account. Defaults to `super@admin.com`.
+- `superadmin.defaultPassword` - Override the default super admin password. Defaults to `superadmin`.
+- `superadmin.defaultRole` - Override the super admin role name. Defaults to `superadmin`.
 
 ## Setup
 
