@@ -36,7 +36,9 @@ export class UserService {
 
   public async findById(id: number): Promise<User> {
     if (!id) throw new BadRequestException('id not provided');
-    return this.userRepository.findOne(id);
+    return this.userRepository.findOne({
+      where: { id },
+    });
   }
 
   /**
@@ -86,7 +88,8 @@ export class UserService {
     offset: number = 0,
     filter: string,
     fields?: string[],
-  ): Promise<User[]> {
+    includeDeleted?: boolean,
+  ): Promise<[User[], number]> {
     const query = this.userRepository.createQueryBuilder('user');
     // if (fields) {
     //   query.select(fields);
@@ -97,31 +100,41 @@ export class UserService {
     // query.addSelect('user.last_name', 'lastName');
     // query.addSelect('user.verified', 'verified');
     // query.addSelect('user.deleted', 'deleted');
+    query.where(
+      `((user.id)::text LIKE :filter OR
+        first_name LIKE :filter OR
+        last_name LIKE :filter OR
+        user.email LIKE :filter)`,
+      { filter },
+    );
+
+    if (!includeDeleted) {
+      query.andWhere('user.deleted = false');
+    }
     query
-      .where(
-        `(user.id)::text LIKE :filter OR
-              first_name LIKE :filter OR
-              last_name LIKE :filter OR
-              user.email LIKE :filter`,
-        { filter },
-      )
       .orderBy(order)
       .limit(limit)
       .offset(offset);
-    return query.getMany();
+    const count = await query.getCount();
+    const users = await query.getMany();
+    return new Promise<[User[], number]>(resolve => resolve([users, count]));
   }
 
-  public async countWithFilter(filter: string): Promise<number> {
-    return this.userRepository
-      .createQueryBuilder('user')
-      .where(
-        `(user.id)::text LIKE :filter OR
+  public async countWithFilter(
+    filter: string,
+    includeDeleted?: boolean,
+  ): Promise<number> {
+    const query = this.userRepository.createQueryBuilder('user').where(
+      `((user.id)::text LIKE :filter OR
         first_name LIKE :filter OR
         last_name LIKE :filter OR
-        user.email LIKE :filter`,
-        { filter },
-      )
-      .getCount();
+        user.email LIKE :filter)`,
+      { filter },
+    );
+    if (!includeDeleted) {
+      query.andWhere('user.deleted = false');
+    }
+    return query.getCount();
   }
 
   public async changePassword(user: User, password: string): Promise<User> {
