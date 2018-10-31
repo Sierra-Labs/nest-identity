@@ -64,9 +64,9 @@ export class UserService implements OnModuleInit {
           roles: [role],
           deleted: false,
           created: new Date(),
-          createdBy: null,
+          createdBy: 1,
           modified: new Date(),
-          modifiedBy: null,
+          modifiedBy: 1,
         });
         this.logger.log('Super Admin user created', superadmin);
       }
