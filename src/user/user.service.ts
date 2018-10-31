@@ -88,6 +88,7 @@ export class UserService {
     offset: number = 0,
     filter: string,
     fields?: string[],
+    includeDeleted?: boolean,
   ): Promise<[User[], number]> {
     const query = this.userRepository.createQueryBuilder('user');
     // if (fields) {
@@ -99,15 +100,18 @@ export class UserService {
     // query.addSelect('user.last_name', 'lastName');
     // query.addSelect('user.verified', 'verified');
     // query.addSelect('user.deleted', 'deleted');
-    query
-      .where(
-        `user.deleted = false AND
-        ((user.id)::text LIKE :filter OR
+    query.where(
+      `((user.id)::text LIKE :filter OR
         first_name LIKE :filter OR
         last_name LIKE :filter OR
         user.email LIKE :filter)`,
-        { filter },
-      )
+      { filter },
+    );
+
+    if (!includeDeleted) {
+      query.andWhere('user.deleted = false');
+    }
+    query
       .orderBy(order)
       .limit(limit)
       .offset(offset);

@@ -163,11 +163,13 @@ export class UserController {
   @ApiImplicitQuery({ name: 'page', required: false })
   @ApiImplicitQuery({ name: 'limit', required: false })
   @ApiImplicitQuery({ name: 'order', required: false })
+  @ApiImplicitQuery({ name: 'includeDeleted', required: false })
   public async getAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('order') order?: string,
     @Query('search') search?: string,
+    @Query('includeDeleted') includeDeleted?: string,
   ) {
     const maxSize = this.configService.get('pagination.maxPageSize') || 200;
     const defaultSize =
@@ -194,12 +196,18 @@ export class UserController {
     const orderConfig = {};
     orderConfig[orderParts[0]] = orderParts[1].toUpperCase();
 
+    // const fields = ['user.id as id', 'email', 'first_name', 'last_name', 'verified', 'deleted'],
+    const fields = null;
+
+    const includeDeletedValue =
+      includeDeleted && (includeDeleted + ' ').toLowerCase().trim() === 'true';
     return this.userService.findWithFilter(
       orderConfig,
       limit,
       offset,
       '%' + (search || '') + '%',
-      // ['user.id as id', 'email', 'first_name', 'last_name', 'verified', 'deleted']
+      fields,
+      includeDeletedValue,
     );
   }
 
