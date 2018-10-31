@@ -29,7 +29,7 @@
     "@nestjs/testing": "^5.0.0-beta.6",
     "@nestjs/typeorm": "^5.0.0",
     "@nestjs/websockets": "^5.0.0-beta.6",
-    "@sierralabs/nest-utils": "*",
+    "@sierralabs/nest-utils": "0.0.10",
     "@types/convict": "^4.2.0",
     "bcrypt": "^3.0.0",
     "class-transformer": "^0.1.9",

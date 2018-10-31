@@ -28,8 +28,8 @@ import {
 import {
   ConfigService,
   RequiredPipe,
-  RequestProperty,
   ParseEntityPipe,
+  ParseBooleanPipe,
 } from '@sierralabs/nest-utils';
 import { UpdateResult } from 'typeorm';
 import { OwnerInterceptor } from './owner.interceptor';
@@ -169,7 +169,8 @@ export class UserController {
     @Query('limit') limit?: number,
     @Query('order') order?: string,
     @Query('search') search?: string,
-    @Query('includeDeleted') includeDeleted?: string,
+    @Query('includeDeleted', new ParseBooleanPipe())
+    includeDeleted?: boolean,
   ) {
     const maxSize = this.configService.get('pagination.maxPageSize') || 200;
     const defaultSize =
@@ -199,15 +200,13 @@ export class UserController {
     // const fields = ['user.id as id', 'email', 'first_name', 'last_name', 'verified', 'deleted'],
     const fields = null;
 
-    const includeDeletedValue =
-      includeDeleted && (includeDeleted + ' ').toLowerCase().trim() === 'true';
     return this.userService.findWithFilter(
       orderConfig,
       limit,
       offset,
       '%' + (search || '') + '%',
       fields,
-      includeDeletedValue,
+      includeDeleted,
     );
   }
 
@@ -215,10 +214,9 @@ export class UserController {
   @Roles('Admin')
   public async getCount(
     @Query('search') search?: string,
-    @Query('includeDeleted') includeDeleted?: string,
+    @Query('includeDeleted', new ParseBooleanPipe())
+    includeDeleted?: boolean,
   ): Promise<number> {
-    const includeDeletedValue =
-      includeDeleted && (includeDeleted + ' ').toLowerCase().trim() === 'true';
-    return this.userService.countWithFilter(search, includeDeletedValue);
+    return this.userService.countWithFilter(search, includeDeleted);
   }
 }
