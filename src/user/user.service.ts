@@ -120,18 +120,21 @@ export class UserService {
     return new Promise<[User[], number]>(resolve => resolve([users, count]));
   }
 
-  public async countWithFilter(filter: string): Promise<number> {
-    return this.userRepository
-      .createQueryBuilder('user')
-      .where(
-        `user.deleted = false AND
-        ((user.id)::text LIKE :filter OR
+  public async countWithFilter(
+    filter: string,
+    includeDeleted?: boolean,
+  ): Promise<number> {
+    const query = this.userRepository.createQueryBuilder('user').where(
+      `((user.id)::text LIKE :filter OR
         first_name LIKE :filter OR
         last_name LIKE :filter OR
         user.email LIKE :filter)`,
         { filter },
-      )
-      .getCount();
+    );
+    if (!includeDeleted) {
+      query.andWhere('user.deleted = false');
+    }
+    return query.getCount();
   }
 
   public async changePassword(user: User, password: string): Promise<User> {

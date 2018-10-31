@@ -213,7 +213,12 @@ export class UserController {
 
   @Get('count')
   @Roles('Admin')
-  public async getCount(@Query('search') search?: string): Promise<number> {
-    return this.userService.countWithFilter(search);
+  public async getCount(
+    @Query('search') search?: string,
+    @Query('includeDeleted') includeDeleted?: string,
+  ): Promise<number> {
+    const includeDeletedValue =
+      includeDeleted && (includeDeleted + ' ').toLowerCase().trim() === 'true';
+    return this.userService.countWithFilter(search, includeDeletedValue);
   }
 }
