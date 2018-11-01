@@ -7,6 +7,7 @@ import {
   Injectable,
   UnauthorizedException,
   OnModuleInit,
+  Logger,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -20,7 +21,7 @@ import { RolesService } from '../roles/roles.service';
 @Injectable()
 export class UserService implements OnModuleInit {
   protected authService: AuthService;
-  private logger = console;
+  private logger = new Logger('UserService');
 
   constructor(
     @InjectRepository(User) protected readonly userRepository: Repository<User>,
@@ -72,7 +73,7 @@ export class UserService implements OnModuleInit {
           Object.assign(defaultAdmin, superAdmin);
         }
         const root = await this.create(defaultAdmin);
-        this.logger.log('Super Admin user created', root);
+        this.logger.log('Super Admin user created:' + JSON.stringify(root));
       }
     }
   }

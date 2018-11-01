@@ -1,11 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { Role } from '../entities';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
 @Injectable()
 export class RolesService {
-  private logger = console;
+  private logger = new Logger('RoleService');
   constructor(
     @InjectRepository(Role) protected readonly roleRepository: Repository<Role>,
   ) {}
@@ -33,7 +33,7 @@ export class RolesService {
         name: defaultRole,
         users: [],
       });
-      this.logger.log('Super Admin role created', role);
+      this.logger.log('Super Admin role created' + JSON.stringify(role));
     } else {
       this.logger.log('Existing role found.');
     }
