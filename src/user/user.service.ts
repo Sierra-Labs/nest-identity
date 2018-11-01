@@ -48,8 +48,8 @@ export class UserService implements OnModuleInit {
     }
     if (saConfig && saConfig.autoCreate) {
       await this.rolesService.initializeRoles(saConfig.defaultRole); // ensure the roles are initialized first
-      const count = await this.userRepository.count();
       this.logger.log('Initializing Users...');
+      const count = await this.userRepository.count();
       if (count <= 0) {
         this.logger.log('No users defined yet, creating superadmin user...');
         const role = await this.rolesService.findByName(
@@ -74,6 +74,8 @@ export class UserService implements OnModuleInit {
         }
         const root = await this.create(defaultAdmin);
         this.logger.log('Super Admin user created:' + JSON.stringify(root));
+      } else {
+        this.logger.log('Skipping super admin creation, users already exist.');
       }
     }
   }
