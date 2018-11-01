@@ -22,13 +22,18 @@ import { RolesService } from '../roles/roles.service';
 export class UserService implements OnModuleInit {
   protected authService: AuthService;
   private logger = new Logger('UserService');
+  private LIKE_OPERATOR: string = 'LIKE';
 
   constructor(
     @InjectRepository(User) protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
     protected readonly moduleRef: ModuleRef,
     protected readonly rolesService: RolesService,
-  ) {}
+  ) {
+    if (this.userRepository.manager.connection.options.type === 'postgres') {
+      this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE
+    }
+  }
 
   /**
    * Implement circular dependency for UserService.
@@ -53,7 +58,7 @@ export class UserService implements OnModuleInit {
       if (count <= 0) {
         this.logger.log('No users defined yet, creating superadmin user...');
         const role = await this.rolesService.findByName(
-          saConfig.defaultRole || 'superadmin',
+          saConfig.defaultRole || 'Admin',
         );
         const defaultAdmin = {
           id: 1,
@@ -147,10 +152,10 @@ export class UserService implements OnModuleInit {
     // query.addSelect('user.verified', 'verified');
     // query.addSelect('user.deleted', 'deleted');
     query.where(
-      `((user.id)::text LIKE :filter OR
-        first_name LIKE :filter OR
-        last_name LIKE :filter OR
-        user.email LIKE :filter)`,
+      `((user.id)::text ${this.LIKE_OPERATOR} :filter OR
+        first_name ${this.LIKE_OPERATOR} :filter OR
+        last_name ${this.LIKE_OPERATOR} :filter OR
+        user.email ${this.LIKE_OPERATOR} :filter)`,
       { filter },
     );
 
@@ -171,10 +176,10 @@ export class UserService implements OnModuleInit {
     includeDeleted?: boolean,
   ): Promise<number> {
     const query = this.userRepository.createQueryBuilder('user').where(
-      `((user.id)::text LIKE :filter OR
-        first_name LIKE :filter OR
-        last_name LIKE :filter OR
-        user.email LIKE :filter)`,
+      `((user.id)::text ${this.LIKE_OPERATOR} :filter OR
+        first_name ${this.LIKE_OPERATOR} :filter OR
+        last_name ${this.LIKE_OPERATOR} :filter OR
+        user.email ${this.LIKE_OPERATOR} :filter)`,
       { filter },
     );
     if (!includeDeleted) {

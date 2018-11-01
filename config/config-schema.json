@@ -94,7 +94,7 @@
     },
     "defaultRole": {
       "format": "String",
-      "default": "superadmin"
+      "default": "Admin"
     }
   }
 }

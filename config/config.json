@@ -55,7 +55,6 @@
   "superadmin": {
     "autoCreate": true,
     "defaultEmail": "super@admin.com",
-    "defaultPassword": "superadmin",
-    "defaultRole": "superadmin"
+    "defaultPassword": "superadmin"
   }
 }
