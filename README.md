@@ -28,7 +28,7 @@ The following are configuration parameters to be used as environment variables o
 - `pagination.maxPageSize` - when querying a list of records limit the number of records returned (defaults to 200).
 - `pagination.defaultPageSize` - when querying a list of records limit the number of records returned by default (defaults to 100).
 - `password.rounds` - Number of bcrypt rounds to use, defaults to 10 if omitted.
-- `superadmin.autoCreate` - Set to false to prevent a superadmin role to be created during start up. Defaults to true.
+- `superadmin.autoCreate` - Set to true if you want a superadmin user created during module initialization. Super admin role and user will only be created if both Roles and User tables are empty. Default is `false`.
 - `superadmin.defaultEmail` - Override the default email address of the superadmin account. Defaults to `super@admin.com`.
 - `superadmin.defaultPassword` - Override the default super admin password. Defaults to `superadmin`.
 - `superadmin.defaultRole` - Override the super admin role name. Defaults to `superadmin`.
@@ -112,9 +112,10 @@ Next, setup your `UserService`, `UserController`, and `ValidateStrategy` overrid
 
 ```javascript
 // user/user.service.ts
+import { Injectable, HttpException, OnModuleInit } from '@nestjs/common';
 import { UserService as BaseUserService } from '@sierralabs/nest-identity';
 @Injectable()
-export class UserService extends BaseUserService {
+export class UserService extends BaseUserService implements OnModuleInit {
   constructor(
     @InjectRepository(User)
     protected readonly userRepository: Repository<User>,
@@ -123,6 +124,13 @@ export class UserService extends BaseUserService {
     protected readonly rolesService: RolesService
   ) {
     super(userRepository, configService, moduleRef, rolesService);
+  }
+  // only necessary if you're user entity has additional required fields
+  onModuleInit() {
+    const user: User = this.userRepository.create({
+      mobileNumber: '8004561111',
+    });
+    super.initialize(user);
   }
 }
 
