@@ -38,14 +38,14 @@ export class UserService implements OnModuleInit {
     this.initialize();
   }
 
-  public async initialize() {
+  public async initialize(superAdmin?: User) {
     let saConfig: any;
     try {
       saConfig = await this.configService.get('superadmin');
     } catch (error) {
-      saConfig = { autoCreate: true };
+      saConfig = { autoCreate: false };
     }
-    if (saConfig.autoCreate) {
+    if (saConfig && saConfig.autoCreate) {
       await this.rolesService.initializeRoles(saConfig.defaultRole); // ensure the roles are initialized first
       this.logger.log('Initializing Users...');
       const count = await this.userRepository.count();
@@ -54,7 +54,7 @@ export class UserService implements OnModuleInit {
         const role = await this.rolesService.findByName(
           saConfig.defaultRole || 'superadmin',
         );
-        const superadmin = await this.create({
+        const defaultAdmin = {
           id: 1,
           email: saConfig.defaultEmail || 'super@admin.com',
           password: saConfig.defaultPassword || 'superadmin',
@@ -67,8 +67,12 @@ export class UserService implements OnModuleInit {
           createdBy: 1,
           modified: new Date(),
           modifiedBy: 1,
-        });
-        this.logger.log('Super Admin user created', superadmin);
+        };
+        if (superAdmin) {
+          Object.assign(defaultAdmin, superAdmin);
+        }
+        const root = await this.create(defaultAdmin);
+        this.logger.log('Super Admin user created', root);
       }
     }
   }
