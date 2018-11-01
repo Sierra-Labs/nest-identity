@@ -48,8 +48,8 @@ export class UserService implements OnModuleInit {
     }
     if (saConfig && saConfig.autoCreate) {
       await this.rolesService.initializeRoles(saConfig.defaultRole); // ensure the roles are initialized first
-      this.logger.log('Initializing Users...');
       const count = await this.userRepository.count();
+      this.logger.log('Initializing Users...');
       if (count <= 0) {
         this.logger.log('No users defined yet, creating superadmin user...');
         const role = await this.rolesService.findByName(
