@@ -28,8 +28,8 @@ import {
 import {
   ConfigService,
   RequiredPipe,
-  RequestProperty,
   ParseEntityPipe,
+  ParseBooleanPipe,
 } from '@sierralabs/nest-utils';
 import { UpdateResult } from 'typeorm';
 import { OwnerInterceptor } from './owner.interceptor';
@@ -163,11 +163,14 @@ export class UserController {
   @ApiImplicitQuery({ name: 'page', required: false })
   @ApiImplicitQuery({ name: 'limit', required: false })
   @ApiImplicitQuery({ name: 'order', required: false })
+  @ApiImplicitQuery({ name: 'includeDeleted', required: false })
   public async getAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
     @Query('order') order?: string,
     @Query('search') search?: string,
+    @Query('includeDeleted', new ParseBooleanPipe())
+    includeDeleted?: boolean,
   ) {
     const maxSize = this.configService.get('pagination.maxPageSize') || 200;
     const defaultSize =
@@ -194,18 +197,26 @@ export class UserController {
     const orderConfig = {};
     orderConfig[orderParts[0]] = orderParts[1].toUpperCase();
 
+    // const fields = ['user.id as id', 'email', 'first_name', 'last_name', 'verified', 'deleted'],
+    const fields = null;
+
     return this.userService.findWithFilter(
       orderConfig,
       limit,
       offset,
       '%' + (search || '') + '%',
-      // ['user.id as id', 'email', 'first_name', 'last_name', 'verified', 'deleted']
+      fields,
+      includeDeleted,
     );
   }
 
   @Get('count')
   @Roles('Admin')
-  public async getCount(@Query('search') search?: string): Promise<number> {
-    return this.userService.countWithFilter(search);
+  public async getCount(
+    @Query('search') search?: string,
+    @Query('includeDeleted', new ParseBooleanPipe())
+    includeDeleted?: boolean,
+  ): Promise<number> {
+    return this.userService.countWithFilter(search, includeDeleted);
   }
 }
