@@ -120,8 +120,8 @@ export class UserService extends BaseUserService implements OnModuleInit {
     @InjectRepository(User)
     protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
+    protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
-    protected readonly rolesService: RolesService
   ) {
     super(userRepository, configService, moduleRef, rolesService);
   }

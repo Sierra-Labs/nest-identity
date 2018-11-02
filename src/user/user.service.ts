@@ -27,8 +27,8 @@ export class UserService implements OnModuleInit {
   constructor(
     @InjectRepository(User) protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
-    protected readonly moduleRef: ModuleRef,
     protected readonly rolesService: RolesService,
+    protected readonly moduleRef: ModuleRef,
   ) {
     if (this.userRepository.manager.connection.options.type === 'postgres') {
       this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE
