@@ -185,7 +185,8 @@ describe('UserControler', () => {
         .mockImplementation(async (id: number) => {
           return new UnauthorizedException();
         });
-      userController.getOne(1001);
+      const request = { user: { id: 1 } };
+      userController.getOne(1001, request);
       expect(spy).toHaveBeenCalled();
     });
   });
