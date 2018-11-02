@@ -9,14 +9,16 @@
   },
   "jwt": {
     "secret": {
-      "doc": "String, buffer, or object containing either the secret for HMAC algorithms or the PEM encoded private key for RSA and ECDSA.",
+      "doc":
+        "String, buffer, or object containing either the secret for HMAC algorithms or the PEM encoded private key for RSA and ECDSA.",
       "format": "String",
       "default": "my-secret",
       "env": "JWT_EXPIRES_IN",
       "sensitive": true
     },
     "expiresIn": {
-      "doc": "expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms). Eg: `60`, `\"2 days\"`, `\"10h\"`, `\"7d\"`. A numeric value is interpreted as a seconds count. If you use a string be sure you provide the time units (days, hours, etc), otherwise milliseconds unit is used by default (`\"120\"` is equal to `\"120ms\"`).",
+      "doc":
+        "expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms). Eg: `60`, `\"2 days\"`, `\"10h\"`, `\"7d\"`. A numeric value is interpreted as a seconds count. If you use a string be sure you provide the time units (days, hours, etc), otherwise milliseconds unit is used by default (`\"120\"` is equal to `\"120ms\"`).",
       "format": "*",
       "default": "120ms",
       "env": "JWT_EXPIRES_IN"
@@ -39,6 +41,30 @@
       "default": "/explorer"
     }
   },
+  "client": {
+    "aws": {
+      "accessKeyId": {
+        "doc": "The AWS IAM Access Key",
+        "format": "String",
+        "default": ""
+      },
+      "secretAccessKey": {
+        "doc": "The AWS IAM Secret",
+        "format": "String",
+        "default": ""
+      },
+      "region": {
+        "doc": "The AWS Region",
+        "format": "String",
+        "default": ""
+      },
+      "bucket": {
+        "doc": "The AWS S3 Bucket where client website is stored",
+        "format": "String",
+        "default": ""
+      }
+    }
+  },
   "database": {
     "type": {
       "format": "String",
@@ -47,28 +73,28 @@
     "host": {
       "format": "String",
       "default": "localhost",
-      "env": "DB_HOST"
+      "env": "TYPEORM_HOST"
     },
     "port": {
       "format": "Number",
       "default": 5432,
-      "env": "DB_PORT"
+      "env": "TYPEORM_PORT"
     },
     "username": {
       "format": "String",
       "default": "root",
-      "env": "DB_USER"
+      "env": "TYPEORM_USERNAME"
     },
     "password": {
       "format": "String",
       "default": "",
-      "env": "DB_PASSWORD",
+      "env": "TYPEORM_PASSWORD",
       "sensitive": true
     },
     "database": {
       "format": "String",
       "default": "",
-      "env": "DB_NAME"
+      "env": "TYPEORM_DATABASE"
     },
     "poolMax": {
       "format": "Number",
@@ -76,25 +102,9 @@
     },
     "ssl": {
       "format": "Boolean",
-      "default": true
+      "default": true,
+      "env": "TYPEORM_SSL"
     }
   },
-  "superadmin": {
-    "autoCreate": {
-      "format": "Boolean",
-      "default": true
-    },
-    "defaultEmail": {
-      "format": "String",
-      "default": "super@admin.com"
-    },
-    "defaultPassword": {
-      "format": "String",
-      "default": "admin"
-    },
-    "defaultRole": {
-      "format": "String",
-      "default": "Admin"
-    }
-  }
+  "vendors": {}
 }

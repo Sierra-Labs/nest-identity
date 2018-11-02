@@ -1,5 +1,11 @@
-db:
-  build: ./db
-  restart: always
-  ports:
-    - "5432:5432"
+version: '2.3'
+services:
+  db:
+    build: ./db
+    restart: always
+    environment:
+      POSTGRES_DB: ${TYPEORM_DATABASE}
+      POSTGRES_USER: ${TYPEORM_USERNAME}
+      POSTGRES_PASSWORD: ${TYPEORM_PASSWORD}
+    ports:
+      - ${TYPEORM_PORT}:${TYPEORM_PORT}

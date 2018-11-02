@@ -150,7 +150,7 @@ export class UserController extends BaseUserController {
 import { ValidateStrategy, JwtPayload, User } from '@sierralabs/nest-identity';
 export class UserValidateStrategy extends ValidateStrategy implements ValidateStrategy {
 
-  constructor(private readonly userService: UserService) {
+  constructor(@Inject(UserService) private readonly userService: UserService) {
     super();
   }
 
@@ -289,6 +289,17 @@ $ npm install
 
 ### Development environment setup
 
+Make sure to have the following installed:
+
+- `Node 8.10+ / NPM 6.1+` for application
+- `docker` for postgres database
+- `jest` for unit testing
+- `tslint` for TypeScript linting (tslint in VSCode to automate linting)
+- `prettier` for auto formatting in VSCode
+- Make sure you setup an [npmjs.com](http://www.npmjs.com) account and request access to the `@sierralabs` private repos for the NPM dependencies.
+
+Install all node module dependencies:
+
 ```bash
 $ npm install
 ```
@@ -313,8 +324,22 @@ $ npm link @sierralabs/nest-identity
 Setup the Postgres database instance.
 
 ```bash
-$ docker-compose up
+# Rebuilds the database with a new Docker container.
+$ npm run db
+
+# Load initial mock data via tests.
+$ npm run mocks
 ```
+
+## Recreating Database Schema
+
+When making changes to the database schema you can create a sql dump to replace `db/initial-db-schema.sql` by running:
+
+```bash
+docker exec -t nest-identity_db_1 pg_dump -U root identity > db/initial-db-schema.sql
+```
+
+> Development: `nest-identity_db_1` - is the name of the docker container on your machine (development).
 
 ## Running the app
 

@@ -13,7 +13,7 @@ import { AuthModule } from '../auth/auth.module';
 import {
   PostgresNamingStrategy,
   ConfigModule,
-  ConfigService
+  ConfigService,
 } from '@sierralabs/nest-utils';
 import { AuthService } from '../auth/auth.service';
 
@@ -35,12 +35,11 @@ describe('UserControler', () => {
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [AppModule]
-      }).compile();
+      imports: [AppModule],
+    }).compile();
 
     userController = module.get<UserController>(UserController);
     userService = module.get<UserService>(UserService);
-
   });
 
   afterEach(() => {
@@ -49,9 +48,11 @@ describe('UserControler', () => {
 
   describe('login', () => {
     it('should call userService.login', async () => {
-      const spy = jest.spyOn(userService, 'login').mockImplementation(async (email: string, password: string) => {
-        return new UnauthorizedException();
-      });
+      const spy = jest
+        .spyOn(userService, 'login')
+        .mockImplementation(async (email: string, password: string) => {
+          return new UnauthorizedException();
+        });
       userController.login('test@gmail.com', 'password');
       expect(spy).toHaveBeenCalled();
     });
@@ -59,7 +60,9 @@ describe('UserControler', () => {
 
   describe('logout', () => {
     it('should call userService.logout', async () => {
-      const spy = jest.spyOn(userService, 'logout').mockImplementation(async (email: string, password: string) => {});
+      const spy = jest
+        .spyOn(userService, 'logout')
+        .mockImplementation(async (email: string, password: string) => {});
       userController.logout();
       expect(spy).toHaveBeenCalled();
     });
@@ -67,41 +70,64 @@ describe('UserControler', () => {
 
   describe('create', () => {
     it('should create a verified user', async () => {
-      const spy = jest.spyOn(userService, 'create').mockImplementation((entity: User) => user);
+      const spy = jest
+        .spyOn(userService, 'create')
+        .mockImplementation((entity: User) => user);
       await userController.create(user);
       expect(spy).toHaveBeenCalled();
     });
 
     it('should fail if creating a user with the same email address', async () => {
-      jest.spyOn(userService, 'create').mockImplementation(async (entity: User) => {
-        throw new QueryFailedError('mock query', undefined, Error('duplicate key value violates unique constraint "user__email__uq"'));
-      });
+      jest
+        .spyOn(userService, 'create')
+        .mockImplementation(async (entity: User) => {
+          throw new QueryFailedError(
+            'mock query',
+            undefined,
+            Error(
+              'duplicate key value violates unique constraint "user__email__uq"',
+            ),
+          );
+        });
       try {
         await userController.create(user);
         throw new Error('create failed to fail');
       } catch (e) {
-        expect(e.message).toMatch('duplicate key value violates unique constraint "user__email__uq"');
+        expect(e.message).toMatch(
+          'duplicate key value violates unique constraint "user__email__uq"',
+        );
       }
     });
   });
 
   describe('register', () => {
-
     it('should register (create) an unverified user', async () => {
-      const spy = jest.spyOn(userService, 'register').mockImplementation(async (entity: User) => user);
+      const spy = jest
+        .spyOn(userService, 'register')
+        .mockImplementation(async (entity: User) => user);
       await userController.register(user);
       expect(spy).toHaveBeenCalled();
     });
 
     it('should fail if creating a user with the same email address', async () => {
-      jest.spyOn(userService, 'register').mockImplementation(async (entity: User) => {
-        throw new  QueryFailedError('mock query', undefined, Error('duplicate key value violates unique constraint "user__email__uq"'));
-      });
+      jest
+        .spyOn(userService, 'register')
+        .mockImplementation(async (entity: User) => {
+          throw new QueryFailedError(
+            'mock query',
+            undefined,
+            Error(
+              'duplicate key value violates unique constraint "user__email__uq"',
+            ),
+          );
+        });
       try {
         await userController.register(user);
         throw new Error('registration failed to fail');
       } catch (e) {
-        expect(e.message).toMatch('duplicate key value violates unique constraint "user__email__uq"');
+        expect(e.message).toMatch(
+          'duplicate key value violates unique constraint "user__email__uq"',
+        );
       }
     });
   });
@@ -109,38 +135,43 @@ describe('UserControler', () => {
   describe('update', () => {
     it('should update user record', async () => {
       const spyChangePassword = jest.spyOn(userService, 'changePassword');
-      jest.spyOn(userService, 'findById').mockImplementation(async (id: number) => {
-        const oldUser = Object.assign({}, user);
-        oldUser.verified = true;
-        return oldUser;
-      });
+      jest
+        .spyOn(userService, 'findById')
+        .mockImplementation(async (id: number) => {
+          const oldUser = Object.assign({}, user);
+          oldUser.verified = true;
+          return oldUser;
+        });
       jest.spyOn(userService, 'update').mockImplementation((entity: User) => {
         expect(entity).toHaveProperty('id', 1001);
         expect(entity).not.toHaveProperty('verified');
       });
-      await userController.update(1001, user, {user: { id: 1001 }});
+      await userController.update(1001, user, { user: { id: 1001 } });
       expect(spyChangePassword).toHaveBeenCalled();
     });
 
     it('should unverify user if email is changed', async () => {
       const userData = Object.assign({}, user);
       userData.email = 'newemail@gmail.com';
-      jest.spyOn(userService, 'findById').mockImplementation(async (id: number) => {
-        return user;
-      });
+      jest
+        .spyOn(userService, 'findById')
+        .mockImplementation(async (id: number) => {
+          return user;
+        });
       jest.spyOn(userService, 'update').mockImplementation((entity: User) => {
         expect(entity).toHaveProperty('verified', false);
       });
-      await userController.update(1001, userData, {user: { id: 1001 }});
-
+      await userController.update(1001, userData, { user: { id: 1001 } });
     });
   });
 
   describe('remove', () => {
     it('should call userService.remove', async () => {
-      const spy = jest.spyOn(userService, 'remove').mockImplementation(async (id: number, modifiedBy: number) => {
-        return new UnauthorizedException();
-      });
+      const spy = jest
+        .spyOn(userService, 'remove')
+        .mockImplementation(async (id: number, modifiedBy: number) => {
+          return new UnauthorizedException();
+        });
       const request = { user: { id: 1 } };
       userController.remove(1001, request);
       expect(spy).toHaveBeenCalled();
@@ -149,9 +180,11 @@ describe('UserControler', () => {
 
   describe('getOne', () => {
     it('should call userService.findById', async () => {
-      const spy = jest.spyOn(userService, 'findById').mockImplementation(async (id: number) => {
-        return new UnauthorizedException();
-      });
+      const spy = jest
+        .spyOn(userService, 'findById')
+        .mockImplementation(async (id: number) => {
+          return new UnauthorizedException();
+        });
       userController.getOne(1001);
       expect(spy).toHaveBeenCalled();
     });
@@ -163,7 +196,9 @@ describe('UserControler', () => {
       // jest.spyOn(userRepository, 'findWithFilter').mockImplementation(() => result);
       // const data = await userRepository.findWithFilter('id asc', 100, 0, '');
 
-      jest.spyOn(userService, 'findWithFilter').mockImplementation(() => result);
+      jest
+        .spyOn(userService, 'findWithFilter')
+        .mockImplementation(() => result);
       const data = await userController.getAll();
 
       expect(data).toBe(result);
@@ -173,9 +208,10 @@ describe('UserControler', () => {
   describe('getCount', () => {
     it('should return the total number of users', async () => {
       const result = 2;
-      jest.spyOn(userService, 'countWithFilter').mockImplementation(() => result);
+      jest
+        .spyOn(userService, 'countWithFilter')
+        .mockImplementation(() => result);
       const count = await userController.getCount();
     });
   });
-
 });

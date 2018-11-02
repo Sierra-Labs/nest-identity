@@ -7,7 +7,7 @@
     "expiresIn": "1y"
   },
   "api": {
-    "basePath": "",
+    "basePath": "/api",
     "explorer": false
   },
   "aws": {
@@ -24,16 +24,10 @@
   },
   "database": {
     "type": "postgres",
-    "host": "ENV:DB_HOST",
-    "port": "ENV:DB_PORT",
-    "username": "ENV:DB_USER",
-    "password": "ENV:DB_PASSWORD",
-    "database": "ENV:DB_NAME",
-    "poolMax": 100,
-    "ssl": true
+    "poolMax": 100
   },
   "email": {
-    "from": "noreply@example.com",
+    "from": "no-reply@example.com",
     "settings": {
       "pool": true,
       "host": "smtp.example.com",
@@ -52,9 +46,12 @@
   "password": {
     "rounds": 14
   },
-  "superadmin": {
-    "autoCreate": true,
-    "defaultEmail": "super@admin.com",
-    "defaultPassword": "superadmin"
+  "client": {
+    "aws": {
+      "accessKeyId": "",
+      "secretAccessKey": "",
+      "region": "us-east-1",
+      "bucket": ""
+    }
   }
 }

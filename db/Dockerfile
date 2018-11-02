@@ -1,7 +1,3 @@
 FROM postgres:10.4
-
-ENV POSTGRES_DB=identity \
-    POSTGRES_USER=admin \
-    POSTGRES_PASSWORD=l0c4lp4ss
-
+COPY initial-db-schema.sql /docker-entrypoint-initdb.d/
 EXPOSE 5432

@@ -1,5 +1,5 @@
 import * as bcrypt from 'bcrypt';
-import _ from 'lodash';
+import * as _ from 'lodash';
 import { Repository, UpdateResult } from 'typeorm';
 
 import {

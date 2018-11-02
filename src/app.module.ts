@@ -1,21 +1,26 @@
-import { Module, forwardRef, RequestMethod, MiddlewareConsumer } from '@nestjs/common';
+import * as convict from 'convict';
+import * as dotenv from 'dotenv';
+
+import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { UserModule } from './user/user.module';
-import { RolesGuard } from './roles/roles.guard';
+import {
+  ConfigModule,
+  ConfigService,
+  PostgresNamingStrategy,
+} from '@sierralabs/nest-utils';
+
+import * as configSchema from '../config/config-schema.json';
 import { AuthModule } from './auth/auth.module';
 import { TestValidateStrategy } from './auth/test-validate.strategy';
-import {
-  PostgresNamingStrategy,
-  ConfigModule,
-  ConfigService
-} from '@sierralabs/nest-utils';
-import { RolesModule } from 'roles';
-import helmet = require('helmet');
-import { UserService } from 'user';
-import { User } from 'entities';
+import { RolesModule } from './roles';
+import { UserModule } from './user/user.module';
 
-const configService = new ConfigService();
-const config = configService.get('database') || {};
+dotenv.config();
+
+const schema = convict(configSchema).validate();
+const configService = new ConfigService(schema);
+
+const config = configService.get('database') || ({} as any);
 
 @Module({
   imports: [
@@ -34,16 +39,14 @@ const config = configService.get('database') || {};
         ssl: config.ssl,
       },
       // synchronize: true,
-      logging: 'all',
+      // logging: 'all',
       namingStrategy: new PostgresNamingStrategy(),
     }),
     AuthModule.forRoot(TestValidateStrategy, [UserModule]),
     RolesModule,
-    UserModule
+    UserModule,
   ],
   controllers: [],
   providers: [],
 })
-export class AppModule {
-
-}
+export class AppModule {}

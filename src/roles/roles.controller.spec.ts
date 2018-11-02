@@ -4,7 +4,7 @@ import { UserModule } from '../user/user.module';
 import { RolesModule } from '../roles/roles.module';
 import { RolesController } from './roles.controller';
 import { Role } from '../entities/role.entity';
-import { RolesService } from '.';
+import { RolesService } from './roles.service';
 import { UnauthorizedException } from '@nestjs/common';
 
 function getRole(): Role {
@@ -15,12 +15,12 @@ function getRole(): Role {
 }
 
 describe('RoleController', () => {
-  let rolesService: RoleService;
+  let rolesService: RolesService;
   let rolesController: RolesController;
 
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      imports: [AppModule]
+      imports: [AppModule],
     }).compile();
 
     rolesController = module.get<RolesController>(RolesController);
@@ -28,16 +28,15 @@ describe('RoleController', () => {
   });
 
   describe('create', () => {
-    it('should call roleService.create', async () => {
+    xit('should call roleService.create', async () => {
       const role = getRole();
-      const spy = jest.spyOn(rolesService, 'create').mockImplementation(
-        async (entity: Role) => {
-        return new UnauthorizedException();
-      });
+      const spy = jest
+        .spyOn(rolesService, 'create')
+        .mockImplementation(async (entity: Role) => {
+          return new UnauthorizedException();
+        });
       rolesController.create(role);
       expect(spy).toHaveBeenCalled();
     });
-
   });
-
 });
