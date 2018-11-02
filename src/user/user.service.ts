@@ -6,6 +6,8 @@ import {
   BadRequestException,
   Injectable,
   UnauthorizedException,
+  OnModuleInit,
+  Logger,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -14,17 +16,24 @@ import { ConfigService } from '@sierralabs/nest-utils';
 import { AuthService } from '../auth/auth.service';
 import { JwtToken } from '../auth/jwt-token.interface';
 import { User } from '../entities/user.entity';
+import { RolesService } from '../roles/roles.service';
 
 @Injectable()
-export class UserService {
+export class UserService implements OnModuleInit {
   protected authService: AuthService;
+  private logger = new Logger('UserService');
+  private LIKE_OPERATOR: string = 'LIKE';
 
   constructor(
     @InjectRepository(User) protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
-    // protected readonly authService: AuthService,
     protected readonly moduleRef: ModuleRef,
-  ) {}
+    protected readonly rolesService: RolesService,
+  ) {
+    if (this.userRepository.manager.connection.options.type === 'postgres') {
+      this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE
+    }
+  }
 
   /**
    * Implement circular dependency for UserService.
@@ -32,6 +41,48 @@ export class UserService {
   onModuleInit() {
     // Prevents circular dependency issue since AuthService also requires UserService
     this.authService = this.moduleRef.get<AuthService>('AuthService');
+    this.initialize();
+  }
+
+  public async initialize(superAdmin?: User) {
+    let saConfig: any;
+    try {
+      saConfig = await this.configService.get('superadmin');
+    } catch (error) {
+      saConfig = { autoCreate: false };
+    }
+    if (saConfig && saConfig.autoCreate) {
+      await this.rolesService.initializeRoles(saConfig.defaultRole); // ensure the roles are initialized first
+      this.logger.log('Initializing Users...');
+      const count = await this.userRepository.count();
+      if (count <= 0) {
+        this.logger.log('No users defined yet, creating superadmin user...');
+        const role = await this.rolesService.findByName(
+          saConfig.defaultRole || 'Admin',
+        );
+        const defaultAdmin = {
+          id: 1,
+          email: saConfig.defaultEmail || 'super@admin.com',
+          password: saConfig.defaultPassword || 'superadmin',
+          firstName: 'Super',
+          lastName: 'Admin',
+          verified: true,
+          roles: [role],
+          deleted: false,
+          created: new Date(),
+          createdBy: 1,
+          modified: new Date(),
+          modifiedBy: 1,
+        };
+        if (superAdmin) {
+          Object.assign(defaultAdmin, superAdmin);
+        }
+        const root = await this.create(defaultAdmin);
+        this.logger.log('Super Admin user created:' + JSON.stringify(root));
+      } else {
+        this.logger.log('Skipping super admin creation, users already exist.');
+      }
+    }
   }
 
   public async findById(id: number): Promise<User> {
@@ -101,10 +152,10 @@ export class UserService {
     // query.addSelect('user.verified', 'verified');
     // query.addSelect('user.deleted', 'deleted');
     query.where(
-      `((user.id)::text LIKE :filter OR
-        first_name LIKE :filter OR
-        last_name LIKE :filter OR
-        user.email LIKE :filter)`,
+      `((user.id)::text ${this.LIKE_OPERATOR} :filter OR
+        first_name ${this.LIKE_OPERATOR} :filter OR
+        last_name ${this.LIKE_OPERATOR} :filter OR
+        user.email ${this.LIKE_OPERATOR} :filter)`,
       { filter },
     );
 
@@ -125,10 +176,10 @@ export class UserService {
     includeDeleted?: boolean,
   ): Promise<number> {
     const query = this.userRepository.createQueryBuilder('user').where(
-      `((user.id)::text LIKE :filter OR
-        first_name LIKE :filter OR
-        last_name LIKE :filter OR
-        user.email LIKE :filter)`,
+      `((user.id)::text ${this.LIKE_OPERATOR} :filter OR
+        first_name ${this.LIKE_OPERATOR} :filter OR
+        last_name ${this.LIKE_OPERATOR} :filter OR
+        user.email ${this.LIKE_OPERATOR} :filter)`,
       { filter },
     );
     if (!includeDeleted) {

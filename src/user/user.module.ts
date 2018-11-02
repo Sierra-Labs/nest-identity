@@ -1,21 +1,15 @@
 import { Module } from '@nestjs/common';
 import { UserService } from './user.service';
 import { UserController } from './user.controller';
-import { ConfigModule } from '@sierralabs/nest-utils';
 import { User } from '../entities/user.entity';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from '../auth/auth.module';
 import { AuthService } from '../auth/auth.service';
-import { RolesGuard } from '../roles/roles.guard';
-import { Connection } from 'typeorm';
-import { TestValidateStrategy } from '../auth/test-validate.strategy';
-
+import { RolesService } from '../roles/roles.service';
+import { RolesModule } from '../roles/roles.module';
 @Module({
-  imports: [
-    TypeOrmModule.forFeature([User])
-  ],
-  providers: [UserService, AuthService],
+  imports: [TypeOrmModule.forFeature([User]), RolesModule],
+  providers: [UserService, AuthService, RolesService],
   controllers: [UserController],
-  exports: [UserService]
+  exports: [UserService],
 })
 export class UserModule {}

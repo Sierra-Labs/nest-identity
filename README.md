@@ -8,7 +8,7 @@ Standard NestJS user management, roles, authentication, and ACL handling.
 
 Make sure to have the following installed
 
-* `NodeJS / NPM` for application
+- `NodeJS / NPM` for application
 
 ## Installation
 
@@ -23,11 +23,15 @@ $ npm install --save @sierralabs/nest-identity
 
 The following are configuration parameters to be used as environment variables or in `config/config.json` or environment specific config json (`config/config.[NODE_ENV].json`)
 
-* `jwt.expiresIn` (Environment: `JWT_EXPIRES_IN`) - expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms). Eg: `60`, `"2 days"`, `"10h"`, `"7d"`. A numeric value is interpreted as a seconds count. If you use a string be sure you provide the time units (days, hours, etc), otherwise milliseconds unit is used by default (`"120"` is equal to `"120ms"`).
-* `jwt.secret` (Environment: `JWT_SECRET`) - is a string, buffer, or object containing either the secret for HMAC algorithms or the PEM encoded private key for RSA and ECDSA.
-* `pagination.maxPageSize` - when querying a list of records limit the number of records returned (defaults to 200).
-* `pagination.defaultPageSize` - when querying a list of records limit the number of records returned by default (defaults to 100).
-* `password.rounds` - Number of bcrypt rounds to use, defaults to 10 if omitted.
+- `jwt.expiresIn` (Environment: `JWT_EXPIRES_IN`) - expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms). Eg: `60`, `"2 days"`, `"10h"`, `"7d"`. A numeric value is interpreted as a seconds count. If you use a string be sure you provide the time units (days, hours, etc), otherwise milliseconds unit is used by default (`"120"` is equal to `"120ms"`).
+- `jwt.secret` (Environment: `JWT_SECRET`) - is a string, buffer, or object containing either the secret for HMAC algorithms or the PEM encoded private key for RSA and ECDSA.
+- `pagination.maxPageSize` - when querying a list of records limit the number of records returned (defaults to 200).
+- `pagination.defaultPageSize` - when querying a list of records limit the number of records returned by default (defaults to 100).
+- `password.rounds` - Number of bcrypt rounds to use, defaults to 10 if omitted.
+- `superadmin.autoCreate` - Set to true if you want a superadmin user created during module initialization. Super admin role and user will only be created if both Roles and User tables are empty. Default is `false`.
+- `superadmin.defaultEmail` - Override the default email address of the superadmin account. Defaults to `super@admin.com`.
+- `superadmin.defaultPassword` - Override the default super admin password. Defaults to `superadmin`.
+- `superadmin.defaultRole` - Override the super admin role name. Defaults to `superadmin`.
 
 ## Setup
 
@@ -37,23 +41,22 @@ Follow the instructions below to get started using the `nest-identitiy` module i
 
 The following is the recommended folder structure for your source files:
 
-* `entities/` - place your NestJS entities here
-  * `user.entity.ts` - extends nest-identity's user.entity.ts
-  * `user-address.entity.ts` - extends nest-identity's user-address.entity.ts
-  * `user-phone.entity.ts` - extends nest-identity's user-phone.entity.ts
-  * `roles.entity.ts` - extends nest-identity's role.entity.ts
-  * `state.entity.ts` - US address state code reference
-  * `organization.ts`
-  * ...
-* `user/`
-  * `user.module.ts` - your custom user module override
-  * `user.service.ts` - user service that extends the nest-identity user.service
-  * `user.controller.ts` - user controller that extends the nest-identity user.controller
-  * `user-validate.strategy.ts` - JWT validate strategy that extends the nest-identity validate.strategy
-* `roles/`
-  * `roles.module.ts` - your custom roles module override
-  * `roles.controller.ts` - roles controller that extends the nest-identity roles.controller
-
+- `entities/` - place your NestJS entities here
+  - `user.entity.ts` - extends nest-identity's user.entity.ts
+  - `user-address.entity.ts` - extends nest-identity's user-address.entity.ts
+  - `user-phone.entity.ts` - extends nest-identity's user-phone.entity.ts
+  - `roles.entity.ts` - extends nest-identity's role.entity.ts
+  - `state.entity.ts` - US address state code reference
+  - `organization.ts`
+  - ...
+- `user/`
+  - `user.module.ts` - your custom user module override
+  - `user.service.ts` - user service that extends the nest-identity user.service
+  - `user.controller.ts` - user controller that extends the nest-identity user.controller
+  - `user-validate.strategy.ts` - JWT validate strategy that extends the nest-identity validate.strategy
+- `roles/`
+  - `roles.module.ts` - your custom roles module override
+  - `roles.controller.ts` - roles controller that extends the nest-identity roles.controller
 
 ### User and Role Entities
 
@@ -69,7 +72,6 @@ import { Role } from './role.entity';
 
 @Entity()
 export class User extends BaseUser {
-
   /**
    * Patient medical ID number.
    */
@@ -103,23 +105,32 @@ export class Role extends BaseRole {
 
 Next, setup your `UserService`, `UserController`, and `ValidateStrategy` overrides of base classes in `nest-identity`:
 
-* `user.service.ts` - service class to interface between the NestJS repository and your controller classes.
-* `user.controller.ts` - NestJS controller for exposing API endpoints, role permissions, and authentication.
-* `user-validate.strategy.ts` - Used by the JWT authentication strategy for validating a decrypted JWT payload.
-* `user.module.ts` - The user module containing references to the above classes. Also, make sure you reference the AuthModule (see below for example)
+- `user.service.ts` - service class to interface between the NestJS repository and your controller classes.
+- `user.controller.ts` - NestJS controller for exposing API endpoints, role permissions, and authentication.
+- `user-validate.strategy.ts` - Used by the JWT authentication strategy for validating a decrypted JWT payload.
+- `user.module.ts` - The user module containing references to the above classes. Also, make sure you reference the AuthModule (see below for example)
 
 ```javascript
 // user/user.service.ts
+import { Injectable, HttpException, OnModuleInit } from '@nestjs/common';
 import { UserService as BaseUserService } from '@sierralabs/nest-identity';
 @Injectable()
-export class UserService extends BaseUserService {
+export class UserService extends BaseUserService implements OnModuleInit {
   constructor(
     @InjectRepository(User)
     protected readonly userRepository: Repository<User>,
     protected readonly configService: ConfigService,
-    protected readonly moduleRef: ModuleRef
+    protected readonly moduleRef: ModuleRef,
+    protected readonly rolesService: RolesService
   ) {
-    super(userRepository, configService, moduleRef);
+    super(userRepository, configService, moduleRef, rolesService);
+  }
+  // only necessary if you're user entity has additional required fields
+  onModuleInit() {
+    const user: User = this.userRepository.create({
+      mobileNumber: '8004561111',
+    });
+    super.initialize(user);
   }
 }
 
@@ -153,6 +164,7 @@ export class UserValidateStrategy extends ValidateStrategy implements ValidateSt
 import { Module } from '@nestjs/common';
 import { User } from '../entities/user.entity';
 import { UserService } from './user.service';
+import { RolesModule } from './../roles/roles.module';
 import { UserController } from './user.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserValidateStrategy } from './user-validate.strategy';
@@ -166,7 +178,8 @@ import {
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
-    AuthModule.forRoot(UserValidateStrategy) // Important for handling ACLs on REST APIs
+    AuthModule.forRoot(UserValidateStrategy), // Important for handling ACLs on REST APIs
+    RolesModule
   ],
   providers: [AuthService, UserService, RolesGuard], // RolesGuard needed for @Roles decorator for ACLs
   controllers: [UserController],
@@ -180,6 +193,7 @@ export class UserModule {}
 Modify your `app.module.ts` to include references to the `AuthModule` and `RolesGuard` if you want to use `@Roles()` decorator for ACL permissions in your own custom NestJS controllers.
 
 Example AppModule:
+
 ```javascript
 @Module({
   imports: [
@@ -202,10 +216,10 @@ Example AppModule:
       namingStrategy: new PostgresNamingStrategy(),
     }),
     AuthModule.forRoot(UserValidateStrategy),
-    UserModule
+    UserModule,
   ],
   controllers: [AppController],
-  providers: [ AppService, RolesGuard ],
+  providers: [AppService, RolesGuard],
 })
 export class AppModule {}
 ```
@@ -215,9 +229,10 @@ export class AppModule {}
 The roles guard decorator `@Roles(...string)` bundled in `nest-identiity` allows you to define ACL permissions on exposed REST API endpoints. You can pass a list of role names into the decorator for validation.
 
 The following are special keywords:
-* `$everyone` - same as not using `@Roles()`; allows everyone to call the endpoint.
-* `$authenticated` - only allows an authenticated user; a user supplying a valid JWT access token.
-* `$userOwner` - When using this keyword make sure to define an `:id` in the path that represents the `user_id`. They keyword will validate the user id in the JWT access token matches the `:id` passed into the URL path.
+
+- `$everyone` - same as not using `@Roles()`; allows everyone to call the endpoint.
+- `$authenticated` - only allows an authenticated user; a user supplying a valid JWT access token.
+- `$userOwner` - When using this keyword make sure to define an `:id` in the path that represents the `user_id`. They keyword will validate the user id in the JWT access token matches the `:id` passed into the URL path.
 
 ```javascript
   @Roles('Admin', '$userOwner')
@@ -264,9 +279,9 @@ The `OwnerInterceptor` is used to assign the requester's user id to any property
 
 To contribute to the `nest-identity` project please make sure to have the following configured in your development environment. Submit pull request to master after making sure all unit tests run successful.
 
-* `docker` for postgres database
-* `tslint` for TypeScript linting (tslint in VSCode to automate linting)
-* `jest` for unit testing
+- `docker` for postgres database
+- `tslint` for TypeScript linting (tslint in VSCode to automate linting)
+- `jest` for unit testing
 
 ```bash
 $ npm install
@@ -281,12 +296,17 @@ $ npm install
 If you would like to develop/debug `nest-identity` in your source project you can npm link to symlink cross-dependency:
 
 ```bash
+# Build the project first
+$ npm run build
+
 # Run npm link on this project
 $ npm link
 
 # Run npm link on your project
 $ npm link @sierralabs/nest-identity
 ```
+
+> Important Note: Ensure that the version of `nest-utils` inside `nest-identity` and in your host application are the same to avoid incompatible types error.
 
 ## Database Setup
 
@@ -320,4 +340,3 @@ $ npm run test:e2e
 # test coverage
 $ npm run test:cov
 ```
-
