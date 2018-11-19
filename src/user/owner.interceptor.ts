@@ -8,7 +8,11 @@ import { map } from 'rxjs/operators';
  */
 @Injectable()
 export class OwnerInterceptor implements NestInterceptor {
-  constructor(private readonly properties: string[]) {}
+  constructor(
+    private readonly properties: string[],
+    private readonly isUserObject = false
+  ) { }
+
   intercept(context: ExecutionContext, stream$: Observable<any>): Observable<any> {
     const request = context.switchToHttp().getRequest();
 
@@ -16,11 +20,9 @@ export class OwnerInterceptor implements NestInterceptor {
       throw new UnprocessableEntityException('No authenticated user specified.');
     }
 
-    for (const property of this.properties) {
-      if (request.body.hasOwnProperty(property)) {
-          request.body[property] = request.user.id;
-      }
-    }
+    this.properties.forEach(property => {
+      request.body[property] = (this.isUserObject) ? request.user : request.user.id;
+    });
 
     return stream$.pipe(map((data) => data));
   }
