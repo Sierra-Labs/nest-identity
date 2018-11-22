@@ -9,14 +9,13 @@ import {
   PostgresNamingStrategy,
 } from '@sierralabs/nest-utils';
 
-import * as configSchema from '../config/config-schema.json';
 import { AuthModule } from './auth/auth.module';
 import { TestValidateStrategy } from './auth/test-validate.strategy';
 import { RolesModule } from './roles';
 import { UserModule } from './user/user.module';
 
+const configSchema = require("../config/config-schema.json"); //use require to bypass tsc baseUrl
 dotenv.config();
-
 const schema = convict(configSchema).validate();
 const configService = new ConfigService(schema);
 
@@ -49,4 +48,4 @@ const config = configService.get('database') || ({} as any);
   controllers: [],
   providers: [],
 })
-export class AppModule {}
+export class AppModule { }
