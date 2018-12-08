@@ -25,6 +25,7 @@
     "mocks": "NODE_ENV=development npm run test:mocks"
   },
   "dependencies": {
+    "@nest-modules/mailer": "^0.4.1",
     "@nestjs/common": "^5.4.0",
     "@nestjs/core": "^5.4.0",
     "@nestjs/microservices": "^5.4.0",

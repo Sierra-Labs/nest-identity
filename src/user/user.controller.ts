@@ -41,13 +41,13 @@ export class UserController {
   constructor(
     protected readonly userService: UserService,
     protected readonly configService: ConfigService,
-  ) {}
+  ) { }
 
   @ApiImplicitBody({
     name: 'login',
     required: true,
     type: class {
-      new() {}
+      new() { }
     },
   }) // Swagger JSON object input (can use DTO for type)
   @Post('login')
@@ -79,7 +79,7 @@ export class UserController {
     name: 'user',
     required: true,
     type: class {
-      new() {}
+      new() { }
     },
   }) // Swagger JSON object input (can use DTO for type)  @Roles('$everyone')
   @Post('register')
@@ -219,4 +219,15 @@ export class UserController {
   ): Promise<number> {
     return this.userService.countWithFilter(search, includeDeleted);
   }
+
+  @Post('password/recover')
+  public async passwordRecovery(@Body('email') email: string): Promise<boolean> {
+    return this.userService.recoverPassword(email);
+  }
+
+  @Put('password/reset')
+  public async passwordReset(@Body('password') password: string, @Body('token') token: string): Promise<boolean> {
+    return this.userService.resetPassword(password, token);
+  }
+
 }

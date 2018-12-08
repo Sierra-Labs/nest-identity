@@ -1,3 +1,4 @@
+import { JwtPayload } from './../../dist/auth/jwt-payload.interface.d';
 import * as bcrypt from 'bcrypt';
 import * as _ from 'lodash';
 import { Repository, UpdateResult } from 'typeorm';
@@ -8,6 +9,7 @@ import {
   UnauthorizedException,
   OnModuleInit,
   Logger,
+  Inject,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -17,6 +19,7 @@ import { AuthService } from '../auth/auth.service';
 import { JwtToken } from '../auth/jwt-token.interface';
 import { User } from '../entities/user.entity';
 import { RolesService } from '../roles/roles.service';
+import { MailerProvider } from '@nest-modules/mailer';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -29,6 +32,7 @@ export class UserService implements OnModuleInit {
     protected readonly configService: ConfigService,
     protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
+    @Inject('MailerProvider') private readonly mailerProvider: MailerProvider,
   ) {
     if (this.userRepository.manager.connection.options.type === 'postgres') {
       this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE
@@ -188,6 +192,7 @@ export class UserService implements OnModuleInit {
     return query.getCount();
   }
 
+  /** Note: this is misleading, should be renamed to encryptPassword */
   public async changePassword(user: User, password: string): Promise<User> {
     const rounds = await this.configService.get('password.rounds');
     // tslint:disable-next-line
@@ -216,7 +221,7 @@ export class UserService implements OnModuleInit {
       throw new UnauthorizedException();
     }
     if (await bcrypt.compare(password, user.password)) {
-      const jwtToken = await this.authService.createToken(user.id, email);
+      const jwtToken = this.authService.createToken(user.id, email);
       jwtToken.user = user;
       delete jwtToken.user.password; // remove token password
       return jwtToken;
@@ -266,5 +271,39 @@ export class UserService implements OnModuleInit {
 
   public async remove(id: number, modifiedBy: number): Promise<UpdateResult> {
     return this.userRepository.update({ id }, { deleted: true, modifiedBy });
+  }
+
+  public async recoverPassword(emailorId: string | number): Promise<boolean> {
+    const user: User = (typeof emailorId == 'number') ? await this.findById(emailorId as number) : await this.findByEmail(emailorId as string);
+    if (user && user.email) {
+      const config = this.configService.get('passwordRecovery');
+      const tokenExpiration = config.tokenExpiration || { value: '1hr', description: 'one hour' };
+      const payload: JwtPayload = { userId: user.id, email: user.email };
+      const token: JwtToken = this.authService.createToken(payload, tokenExpiration);
+      this.mailerProvider.sendMail({
+        to: user.email,
+        from: config.sender,
+        subject: config.subject,
+        template: config.template || 'password-recovery', //TODO: provide default template
+        context: {
+          token: token.accessToken,
+          tokenExpiration: tokenExpiration,
+          user: user,
+          baseUrl: config.baseUrl,
+        }
+      });
+    }
+    return true; // always resolve to true to prevent brute force attacks
+  }
+
+  public async resetPassword(password: string, token: string): Promise<boolean> {
+    const { userId } = this.authService.verifyToken(token);
+    if (userId) {
+      let user: User = await this.findById(userId);
+      user = await this.changePassword(user, password);
+      await this.update(user);
+      return true;
+    }
+    return false;
   }
 }
