@@ -249,17 +249,23 @@ export class UserService implements OnModuleInit {
     if (user.password) {
       user = await this.changePassword(user, user.password);
     }
-    const newUser = this.userRepository.save(user);
-
-    // TODO: Impelement email delivery
-    // const fromEmail = await this.configService.get('email.from');
-    // await this.emailService.sendTemplate(
-    //   fromEmail,
-    //   newUser.email,
-    //   'Welcome Subject',
-    //   'welcome',
-    //   { name: newUser.username }
-    // );
+    const newUser: Promise<User> = this.userRepository.save(user);
+    let self = this;
+    newUser.then((result: User) => {
+      const config = self.configService.get('email');
+      self.mailerProvider.sendMail({
+        to: user.email,
+        from: config.from,
+        subject: config.registration.subject || 'Registration',
+        template: config.registration.template || 'register',
+        context: {
+          user,
+          url: config.clientBaseUrl || 'http://localhost:4200'
+        }
+      });
+    }, err => {
+      this.logger.error(err);
+    });
     return newUser;
   }
 
@@ -276,24 +282,37 @@ export class UserService implements OnModuleInit {
   public async recoverPassword(emailorId: string | number): Promise<boolean> {
     const user: User = (typeof emailorId == 'number') ? await this.findById(emailorId as number) : await this.findByEmail(emailorId as string);
     if (user && user.email) {
-      const config = this.configService.get('passwordRecovery');
-      const tokenExpiration = config.tokenExpiration || { value: '1hr', description: 'one hour' };
+      const config = this.configService.get('email');
+      const tokenExpiration = config.passwordRecovery.tokenExpiration || { value: '1hr', description: 'one hour' };
       const payload: JwtPayload = { userId: user.id, email: user.email };
-      const token: JwtToken = this.authService.createToken(payload, tokenExpiration);
-      this.mailerProvider.sendMail({
-        to: user.email,
-        from: config.sender,
-        subject: config.subject,
-        template: config.template || 'password-recovery', //TODO: provide default template
-        context: {
-          token: token.accessToken,
-          tokenExpiration: tokenExpiration,
-          user: user,
-          baseUrl: config.baseUrl,
-        }
-      });
+      const token: JwtToken = this.authService.createToken(payload, tokenExpiration.value);
+      const baseUrl = config.passwordRecovery.clientBaseUrl || 'http://localhost:4200';
+      const path = config.passwordRecovery.path || '/password/reset';
+      const resetUrl = `${baseUrl}${path}?token=${token.accessToken}`;
+      try {
+        await this.mailerProvider.sendMail({
+          to: user.email,
+          from: config.from,
+          subject: config.passwordRecovery.subject,
+          template: config.passwordRecovery.template || 'password-reset', //TODO: provide default template
+          context: {
+            tokenExpiration: tokenExpiration.description,
+            user: user,
+            resetUrl: resetUrl
+          }
+        });
+      } catch (error) {
+        this.logger.error(error);
+      }
+
+    } else {
+      await this.delay(1000); // prevent brute force attacks
     }
     return true; // always resolve to true to prevent brute force attacks
+  }
+
+  private delay(ms: number) {
+    return new Promise(resolve => setTimeout(resolve, ms));
   }
 
   public async resetPassword(password: string, token: string): Promise<boolean> {

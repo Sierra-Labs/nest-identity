@@ -1,5 +1,7 @@
-import { Entity, Column, Index, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable,
-  TableInheritance, ChildEntity } from 'typeorm';
+import {
+  Entity, Column, Index, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable,
+  TableInheritance, ChildEntity
+} from 'typeorm';
 import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsNotEmpty, MinLength, IsMobilePhone } from 'class-validator';
@@ -57,7 +59,7 @@ export class User {
   @Column({ name: 'modified_by', nullable: true })
   public modifiedBy: number;
 
-  @ApiModelPropertyOptional({ type: Role, isArray: true })
+  // @ApiModelPropertyOptional({ type: Role, isArray: true })
   @ManyToMany(type => Role, role => role.users, {
     eager: true
   })

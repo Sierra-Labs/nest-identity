@@ -5,5 +5,20 @@
   "api": {
     "explorer": true,
     "explorerPath": "/explorer"
+  },
+  "aws": {
+    "accessKeyId": "AKIAIFM6ENEB7PZK3SMQ",
+    "secretAccessKey": "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",
+    "region": "us-west-2",
+    "s3": {
+      "bucket": "bucket",
+      "bucketUrl": "https://s3-us-west-2.amazonaws.com/bucket"
+    }
+  },
+  "email": {
+    "from": "no-reply@sierralabs.io",
+    "settings": {
+      "SES": true
+    }
   }
 }

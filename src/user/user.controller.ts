@@ -24,6 +24,7 @@ import {
   ApiImplicitQuery,
   ApiUseTags,
   ApiBearerAuth,
+  ApiOperation,
 } from '@nestjs/swagger';
 import {
   ConfigService,
@@ -75,18 +76,9 @@ export class UserController {
     return await this.userService.create(user);
   }
 
-  @ApiImplicitBody({
-    name: 'user',
-    required: true,
-    type: class {
-      new() { }
-    },
-  }) // Swagger JSON object input (can use DTO for type)  @Roles('$everyone')
   @Post('register')
-  public async register(
-    @Body(new RequiredPipe())
-    user: User,
-  ): Promise<User> {
+  @ApiOperation({ title: 'register new user' })
+  public async register(@Body() user: User): Promise<User> {
     // try/catch to catch unique key failure, etc
     return await this.userService.register(user);
   }
@@ -221,6 +213,13 @@ export class UserController {
   }
 
   @Post('password/recover')
+  @ApiImplicitBody({
+    name: 'email',
+    required: true,
+    type: class {
+      new() { }
+    },
+  })
   public async passwordRecovery(@Body('email') email: string): Promise<boolean> {
     return this.userService.recoverPassword(email);
   }

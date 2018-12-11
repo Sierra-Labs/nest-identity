@@ -37,6 +37,23 @@
         "user": "username",
         "pass": "password"
       }
+    },
+    "clientBaseUrl": "http://localhost:4200",
+    "forceEmbeddedImages": true,
+    "templateDir": "/public/templates",
+    "templateEngine": "PUG",
+    "passwordRecovery": {
+      "subject": "Reset your password",
+      "path": "/password/reset",
+      "template": "password-reset",
+      "tokenExpiration": {
+        "value": "1hr",
+        "description": "one hour"
+      }
+    },
+    "registration": {
+      "subject": "Your account was registered.",
+      "template": "register"
     }
   },
   "pagination": {

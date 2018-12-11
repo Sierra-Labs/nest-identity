@@ -46,7 +46,7 @@ export class AuthService {
     };
   }
 
-  public verifyToken(token: string) {
-    return jwt.verify(token, this.secret);
+  public verifyToken(token: string): JwtPayload {
+    return jwt.verify(token, this.secret) as JwtPayload;
   }
 }
