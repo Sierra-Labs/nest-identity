@@ -19,6 +19,19 @@
     "from": "no-reply@sierralabs.io",
     "settings": {
       "SES": true
+    },
+    "clientBaseUrl": "http://localhost:4200",
+    "forceEmbeddedImages": true,
+    "templateDir": "/public/templates",
+    "templateEngine": "PUG",
+    "passwordRecovery": {
+      "subject": "Reset your password",
+      "path": "/password-recovery?dialog=reset",
+      "template": "password-reset",
+      "tokenExpiration": {
+        "value": "1hr",
+        "description": "one hour"
+      }
     }
   }
 }

@@ -20,6 +20,7 @@ import { JwtToken } from '../auth/jwt-token.interface';
 import { User } from '../entities/user.entity';
 import { RolesService } from '../roles/roles.service';
 import { MailerProvider } from '@nest-modules/mailer';
+import { RegisterDto } from './user.dto';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -242,9 +243,8 @@ export class UserService implements OnModuleInit {
     return this.userRepository.save(user);
   }
 
-  public async register(user: User): Promise<User> {
-    // new account created by the public should not have an id yet, nor should they be verified
-    delete user.id;
+  public async register(userDto: RegisterDto): Promise<User> {
+    let user = this.userRepository.create(userDto);
     user.verified = false;
     if (user.password) {
       user = await this.changePassword(user, user.password);
@@ -286,14 +286,12 @@ export class UserService implements OnModuleInit {
       const tokenExpiration = config.passwordRecovery.tokenExpiration || { value: '1hr', description: 'one hour' };
       const payload: JwtPayload = { userId: user.id, email: user.email };
       const token: JwtToken = this.authService.createToken(payload, tokenExpiration.value);
-      const baseUrl = config.passwordRecovery.clientBaseUrl || 'http://localhost:4200';
-      const path = config.passwordRecovery.path || '/password/reset';
-      const resetUrl = `${baseUrl}${path}?token=${token.accessToken}`;
+      const resetUrl = this.generatePasswordResetUrl(token.accessToken, config);
       try {
         await this.mailerProvider.sendMail({
           to: user.email,
           from: config.from,
-          subject: config.passwordRecovery.subject,
+          subject: config.passwordRecovery.subject || 'Password Reset',
           template: config.passwordRecovery.template || 'password-reset', //TODO: provide default template
           context: {
             tokenExpiration: tokenExpiration.description,
@@ -311,6 +309,12 @@ export class UserService implements OnModuleInit {
     return true; // always resolve to true to prevent brute force attacks
   }
 
+  private generatePasswordResetUrl(token: string, config: any) {
+    const baseUrl: string = config.passwordRecovery.clientBaseUrl || 'http://localhost:4200';
+    const path: string = config.passwordRecovery.path || '/password/reset';
+    return (path && path.indexOf('?') > 0) ? `${baseUrl}${path}&token=${token}` : `${baseUrl}${path}?token=${token}`;
+  }
+
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
@@ -324,5 +328,17 @@ export class UserService implements OnModuleInit {
       return true;
     }
     return false;
+  }
+
+  public async verifyResetToken(token: string): Promise<User> {
+    try {
+      const { userId } = this.authService.verifyToken(token);
+      if (userId) {
+        return this.findById(userId);
+      }
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+    return null;
   }
 }

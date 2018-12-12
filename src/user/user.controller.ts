@@ -4,13 +4,10 @@ import {
   Post,
   Get,
   Query,
-  UseGuards,
   Param,
   Put,
-  ParseIntPipe,
   NotFoundException,
   HttpCode,
-  NotImplementedException,
   Delete,
   Req,
   UseInterceptors,
@@ -34,6 +31,7 @@ import {
 } from '@sierralabs/nest-utils';
 import { UpdateResult } from 'typeorm';
 import { OwnerInterceptor } from './owner.interceptor';
+import { PasswordRecoveryDto, PasswordResetDto, LoginDto, RegisterDto } from './user.dto';
 
 @ApiBearerAuth()
 @ApiUseTags('Users')
@@ -44,19 +42,12 @@ export class UserController {
     protected readonly configService: ConfigService,
   ) { }
 
-  @ApiImplicitBody({
-    name: 'login',
-    required: true,
-    type: class {
-      new() { }
-    },
-  }) // Swagger JSON object input (can use DTO for type)
   @Post('login')
+  @ApiOperation({ title: 'User Login' })
   public async login(
-    @Body('email') email: string,
-    @Body('password') password: string,
+    @Body() body: LoginDto
   ): Promise<JwtToken> {
-    return this.userService.login(email, password);
+    return this.userService.login(body.email, body.password);
   }
 
   @Roles('$authenticated')
@@ -77,8 +68,8 @@ export class UserController {
   }
 
   @Post('register')
-  @ApiOperation({ title: 'register new user' })
-  public async register(@Body() user: User): Promise<User> {
+  @ApiOperation({ title: 'New User Registration' })
+  public async register(@Body() user: RegisterDto): Promise<User> {
     // try/catch to catch unique key failure, etc
     return await this.userService.register(user);
   }
@@ -213,20 +204,21 @@ export class UserController {
   }
 
   @Post('password/recover')
-  @ApiImplicitBody({
-    name: 'email',
-    required: true,
-    type: class {
-      new() { }
-    },
-  })
-  public async passwordRecovery(@Body('email') email: string): Promise<boolean> {
-    return this.userService.recoverPassword(email);
+  @ApiOperation({ title: 'Request Password Recovery Email' })
+  public async passwordRecovery(@Body() param: PasswordRecoveryDto): Promise<boolean> {
+    return this.userService.recoverPassword(param.email);
   }
 
   @Put('password/reset')
-  public async passwordReset(@Body('password') password: string, @Body('token') token: string): Promise<boolean> {
-    return this.userService.resetPassword(password, token);
+  @ApiOperation({ title: 'Reset User Password' })
+  public async passwordReset(@Body() body: PasswordResetDto): Promise<boolean> {
+    return this.userService.resetPassword(body.password, body.token);
+  }
+
+  @Get('password/verify/resetToken')
+  @ApiOperation({ title: 'Verify Password Reset Token' })
+  public async verifyResetToken(@Query('token') token: string): Promise<User> {
+    return this.userService.verifyResetToken(token);
   }
 
 }
