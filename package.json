@@ -14,6 +14,7 @@
     "build": "tsc",
     "start": "ts-node -r tsconfig-paths/register src/main.ts",
     "start:dev": "nodemon",
+    "start:debug": "nodemon --config nodemon-debug.json",
     "start:hmr": "node dist/server",
     "test": "jest",
     "test:cov": "jest --coverage",
@@ -25,6 +26,7 @@
     "mocks": "NODE_ENV=development npm run test:mocks"
   },
   "dependencies": {
+    "@nest-modules/mailer": "^0.4.1",
     "@nestjs/common": "^5.4.0",
     "@nestjs/core": "^5.4.0",
     "@nestjs/microservices": "^5.4.0",
@@ -35,6 +37,7 @@
     "@nestjs/websockets": "^5.4.0",
     "@sierralabs/nest-utils": "0.0.13",
     "@types/convict": "^4.2.0",
+    "aws-sdk": "^2.373.0",
     "bcrypt": "^3.0.0",
     "class-transformer": "^0.1.10",
     "class-validator": "^0.8.5",
@@ -55,7 +58,7 @@
     "@types/express": "^4.16.0",
     "@types/jest": "^23.3.9",
     "@types/lodash": "^4.14.118",
-    "@types/node": "^9.6.39",
+    "@types/node": "^9.6.40",
     "@types/passport-jwt": "^3.0.1",
     "@types/supertest": "^2.0.6",
     "jest": "^23.6.0",

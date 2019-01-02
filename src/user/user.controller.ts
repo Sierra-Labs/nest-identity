@@ -4,13 +4,10 @@ import {
   Post,
   Get,
   Query,
-  UseGuards,
   Param,
   Put,
-  ParseIntPipe,
   NotFoundException,
   HttpCode,
-  NotImplementedException,
   Delete,
   Req,
   UseInterceptors,
@@ -24,6 +21,7 @@ import {
   ApiImplicitQuery,
   ApiUseTags,
   ApiBearerAuth,
+  ApiOperation,
 } from '@nestjs/swagger';
 import {
   ConfigService,
@@ -33,6 +31,7 @@ import {
 } from '@sierralabs/nest-utils';
 import { UpdateResult } from 'typeorm';
 import { OwnerInterceptor } from './owner.interceptor';
+import { PasswordRecoveryDto, PasswordResetDto, LoginDto, RegisterDto } from './user.dto';
 
 @ApiBearerAuth()
 @ApiUseTags('Users')
@@ -41,21 +40,14 @@ export class UserController {
   constructor(
     protected readonly userService: UserService,
     protected readonly configService: ConfigService,
-  ) {}
+  ) { }
 
-  @ApiImplicitBody({
-    name: 'login',
-    required: true,
-    type: class {
-      new() {}
-    },
-  }) // Swagger JSON object input (can use DTO for type)
   @Post('login')
+  @ApiOperation({ title: 'User Login' })
   public async login(
-    @Body('email') email: string,
-    @Body('password') password: string,
+    @Body() body: LoginDto
   ): Promise<JwtToken> {
-    return this.userService.login(email, password);
+    return this.userService.login(body.email, body.password);
   }
 
   @Roles('$authenticated')
@@ -75,18 +67,9 @@ export class UserController {
     return await this.userService.create(user);
   }
 
-  @ApiImplicitBody({
-    name: 'user',
-    required: true,
-    type: class {
-      new() {}
-    },
-  }) // Swagger JSON object input (can use DTO for type)  @Roles('$everyone')
   @Post('register')
-  public async register(
-    @Body(new RequiredPipe())
-    user: User,
-  ): Promise<User> {
+  @ApiOperation({ title: 'New User Registration' })
+  public async register(@Body() user: RegisterDto): Promise<User> {
     // try/catch to catch unique key failure, etc
     return await this.userService.register(user);
   }
@@ -219,4 +202,23 @@ export class UserController {
   ): Promise<number> {
     return this.userService.countWithFilter(search, includeDeleted);
   }
+
+  @Post('password/recover')
+  @ApiOperation({ title: 'Request Password Recovery Email' })
+  public async passwordRecovery(@Body() param: PasswordRecoveryDto): Promise<boolean> {
+    return this.userService.recoverPassword(param.email);
+  }
+
+  @Put('password/reset')
+  @ApiOperation({ title: 'Reset User Password' })
+  public async passwordReset(@Body() body: PasswordResetDto): Promise<boolean> {
+    return this.userService.resetPassword(body.password, body.token);
+  }
+
+  @Get('password/verify/resetToken')
+  @ApiOperation({ title: 'Verify Password Reset Token' })
+  public async verifyResetToken(@Query('token') token: string): Promise<User> {
+    return this.userService.verifyResetToken(token);
+  }
+
 }

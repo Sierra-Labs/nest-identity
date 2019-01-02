@@ -13,7 +13,7 @@ export class Role {
   @Column()
   public name: string;
 
-  @ApiModelProperty({ type: User, isArray: true })
+  // @ApiModelPropertyOptional({ type: User, isArray: true })
   @ManyToMany(type => User, user => user.roles)
   public users: User[];
 }

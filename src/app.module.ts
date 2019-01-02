@@ -3,6 +3,7 @@ import * as dotenv from 'dotenv';
 
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { MailerModule } from '@nest-modules/mailer';
 import {
   ConfigModule,
   ConfigService,
@@ -13,6 +14,7 @@ import { AuthModule } from './auth/auth.module';
 import { TestValidateStrategy } from './auth/test-validate.strategy';
 import { RolesModule } from './roles';
 import { UserModule } from './user/user.module';
+import { MailerConfigService } from './mailer-config.service';
 
 const configSchema = require("../config/config-schema.json"); //use require to bypass tsc baseUrl
 dotenv.config();
@@ -40,6 +42,9 @@ const config = configService.get('database') || ({} as any);
       // synchronize: true,
       // logging: 'all',
       namingStrategy: new PostgresNamingStrategy(),
+    }),
+    MailerModule.forRootAsync({
+      useClass: MailerConfigService,
     }),
     AuthModule.forRoot(TestValidateStrategy, [UserModule]),
     RolesModule,
