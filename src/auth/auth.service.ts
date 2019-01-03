@@ -31,10 +31,10 @@ export class AuthService {
     let payload: JwtPayload;
     let expiresIn = this.defaultExpiration;
     if (payloadOrUserId instanceof Object) { // payload
-      payload = payloadOrUserId;
+      payload = payloadOrUserId as JwtPayload;
       if (expiresInOrEmail) expiresIn = expiresInOrEmail;
     } else { // userId
-      let email = expiresInOrEmail;
+      const email = expiresInOrEmail;
       if (expiresInOptional) expiresIn = expiresInOptional;
       payload = { userId: payloadOrUserId, email };
     }
