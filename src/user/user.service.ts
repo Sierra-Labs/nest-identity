@@ -245,12 +245,13 @@ export class UserService implements OnModuleInit {
 
   public async register(userDto: RegisterDto): Promise<User> {
     let user = this.userRepository.create(userDto);
+    delete user.id; // remove id to ensure that no existing user gets overwritten
     user.verified = false;
     if (user.password) {
       user = await this.changePassword(user, user.password);
     }
     const newUser: Promise<User> = this.userRepository.save(user);
-    let self = this;
+    const self = this;
     newUser.then((result: User) => {
       const config = self.configService.get('email');
       self.mailerProvider.sendMail({
