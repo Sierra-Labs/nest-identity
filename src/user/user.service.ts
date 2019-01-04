@@ -1,4 +1,3 @@
-import { JwtPayload } from './../../dist/auth/jwt-payload.interface.d';
 import * as bcrypt from 'bcrypt';
 import * as _ from 'lodash';
 import { Repository, UpdateResult } from 'typeorm';
@@ -21,6 +20,7 @@ import { User } from '../entities/user.entity';
 import { RolesService } from '../roles/roles.service';
 import { MailerProvider } from '@nest-modules/mailer';
 import { RegisterDto } from './user.dto';
+import { JwtPayload } from '../auth/jwt-payload.interface';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -245,12 +245,13 @@ export class UserService implements OnModuleInit {
 
   public async register(userDto: RegisterDto): Promise<User> {
     let user = this.userRepository.create(userDto);
+    delete user.id; // remove id to ensure that no existing user gets overwritten
     user.verified = false;
     if (user.password) {
       user = await this.changePassword(user, user.password);
     }
     const newUser: Promise<User> = this.userRepository.save(user);
-    let self = this;
+    const self = this;
     newUser.then((result: User) => {
       const config = self.configService.get('email');
       self.mailerProvider.sendMail({
@@ -280,7 +281,7 @@ export class UserService implements OnModuleInit {
   }
 
   public async recoverPassword(emailorId: string | number): Promise<boolean> {
-    const user: User = (typeof emailorId == 'number') ? await this.findById(emailorId as number) : await this.findByEmail(emailorId as string);
+    const user: User = (typeof emailorId === 'number') ? await this.findById(emailorId as number) : await this.findByEmail(emailorId as string);
     if (user && user.email) {
       const config = this.configService.get('email');
       const tokenExpiration = config.passwordRecovery.tokenExpiration || { value: '1hr', description: 'one hour' };
@@ -292,11 +293,11 @@ export class UserService implements OnModuleInit {
           to: user.email,
           from: config.from,
           subject: config.passwordRecovery.subject || 'Password Reset',
-          template: config.passwordRecovery.template || 'password-reset', //TODO: provide default template
+          template: config.passwordRecovery.template || 'password-reset',
           context: {
             tokenExpiration: tokenExpiration.description,
-            user: user,
-            resetUrl: resetUrl
+            user,
+            resetUrl
           }
         });
       } catch (error) {
