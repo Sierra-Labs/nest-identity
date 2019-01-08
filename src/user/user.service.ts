@@ -33,7 +33,7 @@ export class UserService implements OnModuleInit {
     protected readonly configService: ConfigService,
     protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
-    @Inject('MailerProvider') private readonly mailerProvider: MailerProvider,
+    @Inject('MailerProvider') protected readonly mailerProvider: MailerProvider,
   ) {
     if (this.userRepository.manager.connection.options.type === 'postgres') {
       this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE
