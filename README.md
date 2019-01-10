@@ -122,6 +122,8 @@ export class UserService extends BaseUserService implements OnModuleInit {
     protected readonly configService: ConfigService,
     protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
+    @Optional()
+    @Inject('MailerProvider') protected readonly mailerProvider?: MailerProvider,
   ) {
     super(userRepository, configService, moduleRef, rolesService);
   }
@@ -215,6 +217,9 @@ Example AppModule:
       logging: 'all',
       namingStrategy: new PostgresNamingStrategy(),
     }),
+    MailerModule.forRootAsync({
+      useClass: MailerConfigService,
+    }),
     AuthModule.forRoot(UserValidateStrategy),
     UserModule,
   ],
@@ -266,6 +271,37 @@ The `OwnerInterceptor` is used to assign the requester's user id to any property
 ```
 
 > `QwnerInterceptor` will throw an error if `request.user` is empty.
+
+## Registration and Password Recovery
+
+If you would like to enable email sending for new user registration and password recovery features, You will need to import the MailerModule and provide a MailerConfigService as shown in example below. You can either provide a custom MailerConfigService or use the default provided by this module.
+
+```javascript
+...
+import { MailerModule } from '@nest-modules/mailer';
+import { AuthModule, MailerConfigService } from '@sierralabs/nest-identity';
+
+@Module({
+  imports: [
+    ConfigModule.forRoot(),
+    TypeOrmModule.forRoot({...}),
+    MailerModule.forRootAsync({
+      useClass: MailerConfigService,
+    }),
+    AuthModule.forRoot(UserValidateStrategy),
+    UserModule,
+  ],
+  controllers: [AppController],
+  providers: [AppService, RolesGuard],
+})
+export class AppModule {}
+```
+
+If you are using a subclassed UserService, make sure to inject a MailerProvider in your constructor, see UserService.ts in this module.
+
+This module provides default configurations for email sending that you can override in your own config, please config schema and samples in the config directory.
+
+Finally, you also need create the email templates in the directory you specified in your config file. The default template directory is `public/templates`. You can copy the default templates provided by this module and customize it according to your needs.
 
 ## User Controller
 
