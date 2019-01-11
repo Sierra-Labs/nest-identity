@@ -52,7 +52,7 @@ export class MailerConfigService implements MailerOptionsFactory {
     const defaultEmailConfig = _.clone(defaultConfig.email);
     const emailConfig = this.configService.get('email');
     if (emailConfig) {
-      return _.assign(defaultEmailConfig, emailConfig);
+      return _.merge(defaultEmailConfig, emailConfig);
     }
     return defaultEmailConfig;
   }
