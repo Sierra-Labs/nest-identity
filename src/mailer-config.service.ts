@@ -1,25 +1,28 @@
-import { Injectable } from '@nestjs/common';
-import { MailerOptionsFactory, MailerModuleOptions } from '@nest-modules/mailer';
-import { ConfigService } from '@sierralabs/nest-utils';
-import * as _ from 'lodash';
 import * as AWS from 'aws-sdk';
-const defaultConfig = require('../config/config.json');
+import * as _ from 'lodash';
+
+import {
+  MailerModuleOptions,
+  MailerOptionsFactory,
+} from '@nest-modules/mailer';
+import { Injectable, NotImplementedException } from '@nestjs/common';
+import { ConfigService } from '@sierralabs/nest-utils';
 
 @Injectable()
 export class MailerConfigService implements MailerOptionsFactory {
-  constructor(private readonly configService: ConfigService) { }
+  constructor(private readonly configService: ConfigService) {}
 
   createMailerOptions(): MailerModuleOptions {
     const emailConfig = this.getEmailConfig();
     let options: MailerModuleOptions = {
       defaults: {
         forceEmbeddedImages: emailConfig.forceEmbeddedImages,
-        from: emailConfig.from
+        from: emailConfig.from,
       },
       templateDir: emailConfig.templateDir,
       templateOptions: {
-        engine: emailConfig.templateEngine
-      }
+        engine: emailConfig.templateEngine,
+      },
     };
 
     if (emailConfig.settings) {
@@ -28,10 +31,11 @@ export class MailerConfigService implements MailerOptionsFactory {
         AWS.config.update({
           region: process.env.AWS_REGION || aws.region,
           accessKeyId: process.env.AWS_ACCESS_KEY_ID || aws.accessKeyId,
-          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || aws.secretAccessKey
+          secretAccessKey:
+            process.env.AWS_SECRET_ACCESS_KEY || aws.secretAccessKey,
         });
         options.transport = {
-          SES: new AWS.SES({ apiVersion: 'latest' })
+          SES: new AWS.SES({ apiVersion: 'latest' }),
         };
       } else {
         options.transport = emailConfig.settings;
@@ -39,21 +43,19 @@ export class MailerConfigService implements MailerOptionsFactory {
           // if no auth credentials in config check env
           options.transport.auth = {
             user: process.env.EMAIL_SETTINGS_USER,
-            pass: process.env.EMAIL_SETTINGS_PASS
-          }
+            pass: process.env.EMAIL_SETTINGS_PASS,
+          };
         }
       }
     }
     return options;
   }
 
-
   private getEmailConfig(): any {
-    const defaultEmailConfig = _.clone(defaultConfig.email);
     const emailConfig = this.configService.get('email');
-    if (emailConfig) {
-      return _.merge(defaultEmailConfig, emailConfig);
+    if (!emailConfig) {
+      throw new NotImplementedException('`email` settings missing from config');
     }
-    return defaultEmailConfig;
+    return emailConfig;
   }
 }

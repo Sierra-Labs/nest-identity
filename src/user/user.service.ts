@@ -2,28 +2,27 @@ import * as bcrypt from 'bcrypt';
 import * as _ from 'lodash';
 import { Repository, UpdateResult } from 'typeorm';
 
+import { MailerProvider } from '@nest-modules/mailer';
 import {
   BadRequestException,
-  Injectable,
-  UnauthorizedException,
-  OnModuleInit,
-  Logger,
   Inject,
-  Optional,
+  Injectable,
+  Logger,
   NotImplementedException,
+  OnModuleInit,
+  Optional,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ConfigService } from '@sierralabs/nest-utils';
 
 import { AuthService } from '../auth/auth.service';
+import { JwtPayload } from '../auth/jwt-payload.interface';
 import { JwtToken } from '../auth/jwt-token.interface';
 import { User } from '../entities/user.entity';
 import { RolesService } from '../roles/roles.service';
-import { MailerProvider } from '@nest-modules/mailer';
 import { RegisterDto } from './user.dto';
-import { JwtPayload } from '../auth/jwt-payload.interface';
-const defaultConfig = require('../../config/config.json');
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -37,7 +36,8 @@ export class UserService implements OnModuleInit {
     protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
     @Optional()
-    @Inject('MailerProvider') protected readonly mailerProvider?: MailerProvider,
+    @Inject('MailerProvider')
+    protected readonly mailerProvider?: MailerProvider,
   ) {
     if (this.userRepository.manager.connection.options.type === 'postgres') {
       this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE
@@ -257,35 +257,39 @@ export class UserService implements OnModuleInit {
     const newUser: Promise<User> = this.userRepository.save(user);
     const self = this;
     const config = this.getEmailConfig();
-    newUser.then((result: User) => {
-      if (!self.mailerProvider) {
-        self.logger.warn('No mailer provider injected, skipping email sending. Please add a mailer provider in your app module.')
-      } else {
-        self.mailerProvider.sendMail({
-          to: user.email,
-          from: config.from,
-          subject: config.registration.subject,
-          template: config.registration.template,
-          context: {
-            user,
-            url: config.clientBaseUrl
-          }
-        });
-        self.logger.log(`Registration email sent to ${user.email}`);
-      }
-    }, err => {
-      self.logger.error(err);
-    });
+    newUser.then(
+      (result: User) => {
+        if (!self.mailerProvider) {
+          self.logger.warn(
+            'No mailer provider injected, skipping email sending. Please add a mailer provider in your app module.',
+          );
+        } else {
+          self.mailerProvider.sendMail({
+            to: user.email,
+            from: config.from,
+            subject: config.registration.subject,
+            template: config.registration.template,
+            context: {
+              user,
+              url: config.clientBaseUrl,
+            },
+          });
+          self.logger.log(`Registration email sent to ${user.email}`);
+        }
+      },
+      err => {
+        self.logger.error(err);
+      },
+    );
     return newUser;
   }
 
   private getEmailConfig(): any {
-    const defaultEmailConfig = _.clone(defaultConfig.email);
     const emailConfig = this.configService.get('email');
-    if (emailConfig) {
-      return _.merge(defaultEmailConfig, emailConfig);
+    if (!emailConfig) {
+      throw new NotImplementedException('`email` settings missing from config');
     }
-    return defaultEmailConfig;
+    return emailConfig;
   }
 
   public async update(user: User): Promise<User> {
@@ -300,15 +304,23 @@ export class UserService implements OnModuleInit {
 
   public async recoverPassword(emailorId: string | number): Promise<boolean> {
     if (!this.mailerProvider) {
-      this.logger.warn('No mailer provider injected, skipping email sending. Please add a mailer provider in your app module');
+      this.logger.warn(
+        'No mailer provider injected, skipping email sending. Please add a mailer provider in your app module',
+      );
       throw new NotImplementedException('No mailer provider configured!');
     }
-    const user: User = (typeof emailorId === 'number') ? await this.findById(emailorId as number) : await this.findByEmail(emailorId as string);
+    const user: User =
+      typeof emailorId === 'number'
+        ? await this.findById(emailorId as number)
+        : await this.findByEmail(emailorId as string);
     if (user && user.email) {
       const config = this.getEmailConfig();
       const tokenExpiration = config.passwordRecovery.tokenExpiration;
       const payload: JwtPayload = { userId: user.id, email: user.email };
-      const token: JwtToken = this.authService.createToken(payload, tokenExpiration.value);
+      const token: JwtToken = this.authService.createToken(
+        payload,
+        tokenExpiration.value,
+      );
       const resetUrl = this.generatePasswordResetUrl(token.accessToken, config);
       try {
         await this.mailerProvider.sendMail({
@@ -319,13 +331,12 @@ export class UserService implements OnModuleInit {
           context: {
             tokenExpiration: tokenExpiration.description,
             user,
-            resetUrl
-          }
+            resetUrl,
+          },
         });
       } catch (error) {
         this.logger.error(error);
       }
-
     } else {
       await this.delay(1000); // prevent brute force attacks
     }
@@ -333,16 +344,22 @@ export class UserService implements OnModuleInit {
   }
 
   private generatePasswordResetUrl(token: string, config: any) {
-    const baseUrl: string = config.passwordRecovery.clientBaseUrl || 'http://localhost:4200';
+    const baseUrl: string =
+      config.passwordRecovery.clientBaseUrl || 'http://localhost:4200';
     const path: string = config.passwordRecovery.path || '/password/reset';
-    return (path && path.indexOf('?') > 0) ? `${baseUrl}${path}&token=${token}` : `${baseUrl}${path}?token=${token}`;
+    return path && path.indexOf('?') > 0
+      ? `${baseUrl}${path}&token=${token}`
+      : `${baseUrl}${path}?token=${token}`;
   }
 
   private delay(ms: number) {
     return new Promise(resolve => setTimeout(resolve, ms));
   }
 
-  public async resetPassword(password: string, token: string): Promise<boolean> {
+  public async resetPassword(
+    password: string,
+    token: string,
+  ): Promise<boolean> {
     const { userId } = this.authService.verifyToken(token);
     if (userId) {
       let user: User = await this.findById(userId);

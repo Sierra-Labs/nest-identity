@@ -1,6 +1,6 @@
 {
   "name": "@sierralabs/nest-identity",
-  "version": "0.0.18",
+  "version": "0.1.3",
   "description": "Standard user management, roles, authentication, and ACL handling.",
   "author": "Sierra Labs",
   "license": "MIT",
