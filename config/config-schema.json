@@ -9,16 +9,14 @@
   },
   "jwt": {
     "secret": {
-      "doc":
-        "String, buffer, or object containing either the secret for HMAC algorithms or the PEM encoded private key for RSA and ECDSA.",
+      "doc": "String, buffer, or object containing either the secret for HMAC algorithms or the PEM encoded private key for RSA and ECDSA.",
       "format": "String",
       "default": "my-secret",
       "env": "JWT_EXPIRES_IN",
       "sensitive": true
     },
     "expiresIn": {
-      "doc":
-        "expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms). Eg: `60`, `\"2 days\"`, `\"10h\"`, `\"7d\"`. A numeric value is interpreted as a seconds count. If you use a string be sure you provide the time units (days, hours, etc), otherwise milliseconds unit is used by default (`\"120\"` is equal to `\"120ms\"`).",
+      "doc": "expressed in seconds or a string describing a time span [zeit/ms](https://github.com/zeit/ms). Eg: `60`, `\"2 days\"`, `\"10h\"`, `\"7d\"`. A numeric value is interpreted as a seconds count. If you use a string be sure you provide the time units (days, hours, etc), otherwise milliseconds unit is used by default (`\"120\"` is equal to `\"120ms\"`).",
       "format": "*",
       "default": "120ms",
       "env": "JWT_EXPIRES_IN"
@@ -39,6 +37,26 @@
       "doc": "The URL path for Swagger (Open API) specification.",
       "format": "String",
       "default": "/explorer"
+    }
+  },
+  "aws": {
+    "accessKeyId": {
+      "doc": "The AWS IAM Access Key",
+      "format": "String",
+      "default": "",
+      "env": "AWS_ACCESS_KEY_ID"
+    },
+    "secretAccessKey": {
+      "doc": "The AWS IAM Secret",
+      "format": "String",
+      "default": "",
+      "env": "AWS_SECRET_ACCESS_KEY"
+    },
+    "region": {
+      "doc": "The AWS Region",
+      "format": "String",
+      "default": "",
+      "env": "AWS_REGION"
     }
   },
   "client": {
@@ -106,5 +124,84 @@
       "env": "TYPEORM_SSL"
     }
   },
-  "vendors": {}
+  "vendors": {},
+  "email": {
+    "from": {
+      "format": "String",
+      "default": "no-reply@example.com"
+    },
+    "settings": {
+      "SES": {
+        "doc": "Define and set to true if you would like to use AWS SES for email sending. This requires aws credentials defined in the config.",
+        "format": "Boolean",
+        "default": false
+      },
+      "pool": {
+        "format": "Boolean",
+        "default": false
+      },
+      "host": {
+        "doc": "SMTP Host",
+        "format": "String",
+        "default": ""
+      },
+      "port": {
+        "doc": "SMTP port",
+        "format": "Number",
+        "default": 465
+      },
+      "secure": {
+        "doc": "Whether to use secure socket when sending out email",
+        "format": "Boolean",
+        "default": true
+      },
+      "auth": {
+        "user": {
+          "doc": "SMTP username",
+          "format": "String",
+          "default": "",
+          "env": "EMAIL_SETTINGS_USER"
+        },
+        "pass": {
+          "doc": "SMTP password",
+          "format": "String",
+          "default": "",
+          "env": "EMAIL_SETTINGS_PASS"
+        }
+      }
+    },
+    "clientBaseUrl": {
+      "doc": "The base url used in the email template to link to the host application",
+      "format": "String",
+      "default": "http://localhost:4200"
+    },
+    "forceEmbeddedImages": {
+      "doc": "Whether to embed images in the email body",
+      "format": "Boolean",
+      "default": false
+    },
+    "templateDir": {
+      "doc": "The relative path of the templates directory containing the email templates",
+      "format": "String",
+      "default": "/public/templates"
+    },
+    "templateEngine": {
+      "doc": "The template engine used for rendering html. Accepts PUG (default) or HANDLEBARS (case-insensitive).",
+      "format": "String",
+      "default": "PUG"
+    },
+    "passwordRecovery": {
+      "subject": "Reset your password",
+      "path": "/password-recovery?dialog=reset",
+      "template": "password-reset",
+      "tokenExpiration": {
+        "value": "1hr",
+        "description": "one hour"
+      }
+    },
+    "registration": {
+      "subject": "Thank you for signing up",
+      "template": "register"
+    }
+  }
 }

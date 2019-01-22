@@ -1,36 +1,59 @@
 import { Injectable } from '@nestjs/common';
 import { MailerOptionsFactory, MailerModuleOptions } from '@nest-modules/mailer';
 import { ConfigService } from '@sierralabs/nest-utils';
+import * as _ from 'lodash';
 import * as AWS from 'aws-sdk';
+const defaultConfig = require('../config/config.json');
 
 @Injectable()
 export class MailerConfigService implements MailerOptionsFactory {
   constructor(private readonly configService: ConfigService) { }
 
   createMailerOptions(): MailerModuleOptions {
-    let emailSettings = this.configService.get('email.settings');
+    const emailConfig = this.getEmailConfig();
     let options: MailerModuleOptions = {
       defaults: {
-        forceEmbeddedImages: this.configService.get('email.forceEmbeddedImages') || process.env.EMAIL_FORCE_EMBEDDED_IMAGES,
-        from: this.configService.get('email.from') || process.env.EMAIL_FROM,
+        forceEmbeddedImages: emailConfig.forceEmbeddedImages,
+        from: emailConfig.from
       },
-      templateDir: this.configService.get('email.templateDir') || process.env.EMAIL_TEMPLATE_DIR,
+      templateDir: emailConfig.templateDir,
       templateOptions: {
-        engine: this.configService.get('email.templateEngine') || process.env.EMAIL_TEMPLATE_ENGINE,
+        engine: emailConfig.templateEngine
       }
     };
-    if (emailSettings.SES) { // use aws client credential
-      AWS.config.update({
-        region: this.configService.get('aws.region') || process.env.AWS_REGION,
-        accessKeyId: this.configService.get('aws.accessKeyId') || process.env.AWS_ACCESS_KEY_ID,
-        secretAccessKey: this.configService.get('aws.secretAccessKey') || process.env.AWS_SECRET_ACCESS_KEY,
-      });
-      options.transport = {
-        SES: new AWS.SES({ apiVersion: 'latest' })
-      };
-    } else { // smtp/sendmail/stream config object or string
-      options.transport = emailSettings;
+
+    if (emailConfig.settings) {
+      if (emailConfig.settings.SES) {
+        let aws = this.configService.get('aws');
+        AWS.config.update({
+          region: process.env.AWS_REGION || aws.region,
+          accessKeyId: process.env.AWS_ACCESS_KEY_ID || aws.accessKeyId,
+          secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY || aws.secretAccessKey
+        });
+        options.transport = {
+          SES: new AWS.SES({ apiVersion: 'latest' })
+        };
+      } else {
+        options.transport = emailConfig.settings;
+        if (!options.transport.auth) {
+          // if no auth credentials in config check env
+          options.transport.auth = {
+            user: process.env.EMAIL_SETTINGS_USER,
+            pass: process.env.EMAIL_SETTINGS_PASS
+          }
+        }
+      }
     }
     return options;
+  }
+
+
+  private getEmailConfig(): any {
+    const defaultEmailConfig = _.clone(defaultConfig.email);
+    const emailConfig = this.configService.get('email');
+    if (emailConfig) {
+      return _.merge(defaultEmailConfig, emailConfig);
+    }
+    return defaultEmailConfig;
   }
 }

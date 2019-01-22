@@ -9,6 +9,8 @@ import {
   OnModuleInit,
   Logger,
   Inject,
+  Optional,
+  NotImplementedException,
 } from '@nestjs/common';
 import { ModuleRef } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -21,6 +23,7 @@ import { RolesService } from '../roles/roles.service';
 import { MailerProvider } from '@nest-modules/mailer';
 import { RegisterDto } from './user.dto';
 import { JwtPayload } from '../auth/jwt-payload.interface';
+const defaultConfig = require('../../config/config.json');
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -33,7 +36,8 @@ export class UserService implements OnModuleInit {
     protected readonly configService: ConfigService,
     protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
-    @Inject('MailerProvider') protected readonly mailerProvider: MailerProvider,
+    @Optional()
+    @Inject('MailerProvider') protected readonly mailerProvider?: MailerProvider,
   ) {
     if (this.userRepository.manager.connection.options.type === 'postgres') {
       this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE
@@ -252,22 +256,36 @@ export class UserService implements OnModuleInit {
     }
     const newUser: Promise<User> = this.userRepository.save(user);
     const self = this;
+    const config = this.getEmailConfig();
     newUser.then((result: User) => {
-      const config = self.configService.get('email');
-      self.mailerProvider.sendMail({
-        to: user.email,
-        from: config.from,
-        subject: config.registration.subject || 'Registration',
-        template: config.registration.template || 'register',
-        context: {
-          user,
-          url: config.clientBaseUrl || 'http://localhost:4200'
-        }
-      });
+      if (!self.mailerProvider) {
+        self.logger.warn('No mailer provider injected, skipping email sending. Please add a mailer provider in your app module.')
+      } else {
+        self.mailerProvider.sendMail({
+          to: user.email,
+          from: config.from,
+          subject: config.registration.subject,
+          template: config.registration.template,
+          context: {
+            user,
+            url: config.clientBaseUrl
+          }
+        });
+        self.logger.log(`Registration email sent to ${user.email}`);
+      }
     }, err => {
-      this.logger.error(err);
+      self.logger.error(err);
     });
     return newUser;
+  }
+
+  private getEmailConfig(): any {
+    const defaultEmailConfig = _.clone(defaultConfig.email);
+    const emailConfig = this.configService.get('email');
+    if (emailConfig) {
+      return _.merge(defaultEmailConfig, emailConfig);
+    }
+    return defaultEmailConfig;
   }
 
   public async update(user: User): Promise<User> {
@@ -281,10 +299,14 @@ export class UserService implements OnModuleInit {
   }
 
   public async recoverPassword(emailorId: string | number): Promise<boolean> {
+    if (!this.mailerProvider) {
+      this.logger.warn('No mailer provider injected, skipping email sending. Please add a mailer provider in your app module');
+      throw new NotImplementedException('No mailer provider configured!');
+    }
     const user: User = (typeof emailorId === 'number') ? await this.findById(emailorId as number) : await this.findByEmail(emailorId as string);
     if (user && user.email) {
-      const config = this.configService.get('email');
-      const tokenExpiration = config.passwordRecovery.tokenExpiration || { value: '1hr', description: 'one hour' };
+      const config = this.getEmailConfig();
+      const tokenExpiration = config.passwordRecovery.tokenExpiration;
       const payload: JwtPayload = { userId: user.id, email: user.email };
       const token: JwtToken = this.authService.createToken(payload, tokenExpiration.value);
       const resetUrl = this.generatePasswordResetUrl(token.accessToken, config);
@@ -292,8 +314,8 @@ export class UserService implements OnModuleInit {
         await this.mailerProvider.sendMail({
           to: user.email,
           from: config.from,
-          subject: config.passwordRecovery.subject || 'Password Reset',
-          template: config.passwordRecovery.template || 'password-reset',
+          subject: config.passwordRecovery.subject,
+          template: config.passwordRecovery.template,
           context: {
             tokenExpiration: tokenExpiration.description,
             user,

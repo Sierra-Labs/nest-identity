@@ -21,7 +21,7 @@
       "SES": true
     },
     "clientBaseUrl": "http://localhost:4200",
-    "forceEmbeddedImages": true,
+    "forceEmbeddedImages": false,
     "templateDir": "/public/templates",
     "templateEngine": "PUG",
     "passwordRecovery": {
@@ -32,6 +32,10 @@
         "value": "1hr",
         "description": "one hour"
       }
+    },
+    "registration": {
+      "subject": "Thank you for signing up",
+      "template": "register"
     }
   }
 }
