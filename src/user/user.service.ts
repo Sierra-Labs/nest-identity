@@ -5,6 +5,7 @@ import { Repository, UpdateResult } from 'typeorm';
 import { MailerProvider } from '@nest-modules/mailer';
 import {
   BadRequestException,
+  ConflictException,
   Inject,
   Injectable,
   Logger,
@@ -213,7 +214,7 @@ export class UserService implements OnModuleInit {
   public async login(email: string, password: string): Promise<JwtToken> {
     const user = await this.findByEmail(email, { selectPassword: true });
 
-    if (!user || user.deleted /*|| !user.verified*/) {
+    if (!user || user.deleted) {
       // TODO: check if user is email verified
 
       // arbitrary bcrypt.compare to prevent(?) timing attacks. Both good/bad paths take
@@ -226,6 +227,18 @@ export class UserService implements OnModuleInit {
       throw new UnauthorizedException();
     }
     if (await bcrypt.compare(password, user.password)) {
+      const emailConfig = this.configService.get('email');
+      const isEmailVerification =
+        emailConfig && emailConfig.registration
+          ? emailConfig.registration.isEmailVerification
+          : false;
+      if (isEmailVerification && !user.verified) {
+        // system requires email verification before logging in
+        this.sendRegistrationEmail(user);
+        throw new ConflictException(
+          'E-mail address verification required. Please check your e-mail.',
+        );
+      }
       const jwtToken = this.authService.createToken(user.id, email);
       jwtToken.user = user;
       delete jwtToken.user.password; // remove token password
@@ -244,7 +257,17 @@ export class UserService implements OnModuleInit {
       user = await this.changePassword(user, user.password);
     }
     delete user.id; // make sure no existing id exists when saving user
-    return this.userRepository.save(user);
+    try {
+      return this.userRepository.save(user);
+    } catch (error) {
+      if (error.constraint === 'user__email__uq') {
+        throw new ConflictException(
+          'Duplicate email. Please try a different email address.',
+        );
+      } else {
+        throw error;
+      }
+    }
   }
 
   public async register(userDto: RegisterDto): Promise<User> {
@@ -254,34 +277,65 @@ export class UserService implements OnModuleInit {
     if (user.password) {
       user = await this.changePassword(user, user.password);
     }
-    const newUser: Promise<User> = this.userRepository.save(user);
-    const self = this;
-    const config = this.getEmailConfig();
-    newUser.then(
-      (result: User) => {
-        if (!self.mailerProvider) {
-          self.logger.warn(
-            'No mailer provider injected, skipping email sending. Please add a mailer provider in your app module.',
-          );
-        } else {
-          self.mailerProvider.sendMail({
-            to: user.email,
-            from: config.from,
-            subject: config.registration.subject,
-            template: config.registration.template,
-            context: {
-              user,
-              url: config.clientBaseUrl,
-            },
-          });
-          self.logger.log(`Registration email sent to ${user.email}`);
-        }
-      },
-      err => {
-        self.logger.error(err);
-      },
-    );
+
+    let newUser;
+    try {
+      newUser = await this.userRepository.save(user);
+    } catch (error) {
+      if (error.constraint === 'user__email__uq') {
+        throw new ConflictException(
+          'Duplicate email. Please try a different email address.',
+        );
+      } else {
+        throw error;
+      }
+    }
+    this.sendRegistrationEmail(newUser);
+
     return newUser;
+  }
+
+  private sendRegistrationEmail(user: User) {
+    const config = this.getEmailConfig();
+    if (!this.mailerProvider) {
+      this.logger.warn(
+        'No mailer provider injected, skipping email sending. Please add a mailer provider in your app module.',
+      );
+    } else if (!config.from) {
+      this.logger.warn(
+        'No `config.from` specified. Could not send registration email.',
+      );
+    } else if (!config.registration || !config.registration.subject) {
+      this.logger.warn(
+        'No `config.registration.subject` specified. Could not send registration email.',
+      );
+    } else if (!config.registration || !config.registration.template) {
+      this.logger.warn(
+        'No `config.registration.template` specified. Could not send registration email.',
+      );
+    } else {
+      const options = {
+        to: user.email,
+        from: config.from,
+        subject: config.registration.subject,
+        template: config.registration.template,
+        context: {
+          user,
+          url: config.clientBaseUrl,
+          emailVerificationUrl: '',
+          tokenExpiration: config.registration.tokenExpiration.description,
+        },
+      };
+      if (config.registration.isEmailVerification) {
+        options.context.emailVerificationUrl = this.generateTokenUrl(
+          user,
+          config.clientBaseUrl,
+          config.registration,
+        );
+      }
+      this.mailerProvider.sendMail(options);
+      this.logger.log(`Registration email sent to ${user.email}`);
+    }
   }
 
   private getEmailConfig(): any {
@@ -315,13 +369,28 @@ export class UserService implements OnModuleInit {
         : await this.findByEmail(emailorId as string);
     if (user && user.email) {
       const config = this.getEmailConfig();
-      const tokenExpiration = config.passwordRecovery.tokenExpiration;
-      const payload: JwtPayload = { userId: user.id, email: user.email };
-      const token: JwtToken = this.authService.createToken(
-        payload,
-        tokenExpiration.value,
+      const resetUrl = this.generateTokenUrl(
+        user,
+        config.clientBaseUrl,
+        config.passwordRecovery,
       );
-      const resetUrl = this.generatePasswordResetUrl(token.accessToken, config);
+      if (!this.mailerProvider) {
+        this.logger.warn(
+          'No mailer provider injected, skipping email sending. Please add a mailer provider in your app module.',
+        );
+      } else if (!config.from) {
+        this.logger.warn(
+          'No `config.from` specified. Could not send password recovery email.',
+        );
+      } else if (!config.registration || !config.registration.subject) {
+        this.logger.warn(
+          'No `config.passwordRecovery.subject` specified. Could not send password recovery email.',
+        );
+      } else if (!config.registration || !config.registration.template) {
+        this.logger.warn(
+          'No `config.passwordRecovery.template` specified. Could not send password recovery email.',
+        );
+      }
       try {
         await this.mailerProvider.sendMail({
           to: user.email,
@@ -329,7 +398,8 @@ export class UserService implements OnModuleInit {
           subject: config.passwordRecovery.subject,
           template: config.passwordRecovery.template,
           context: {
-            tokenExpiration: tokenExpiration.description,
+            tokenExpiration:
+              config.passwordRecovery.tokenExpiration.description,
             user,
             resetUrl,
           },
@@ -343,13 +413,18 @@ export class UserService implements OnModuleInit {
     return true; // always resolve to true to prevent brute force attacks
   }
 
-  private generatePasswordResetUrl(token: string, config: any) {
-    const baseUrl: string =
-      config.passwordRecovery.clientBaseUrl || 'http://localhost:4200';
-    const path: string = config.passwordRecovery.path || '/password/reset';
+  private generateTokenUrl(user: User, baseUrl: string, config: any) {
+    const tokenExpiration = config.tokenExpiration;
+    const payload: JwtPayload = { userId: user.id, email: user.email };
+    const token: JwtToken = this.authService.createToken(
+      payload,
+      tokenExpiration.value,
+    );
+    baseUrl = baseUrl || 'http://localhost:4200';
+    const path: string = config.path || '/password/reset';
     return path && path.indexOf('?') > 0
-      ? `${baseUrl}${path}&token=${token}`
-      : `${baseUrl}${path}?token=${token}`;
+      ? `${baseUrl}${path}&token=${token.accessToken}`
+      : `${baseUrl}${path}?token=${token.accessToken}`;
   }
 
   private delay(ms: number) {
@@ -375,6 +450,22 @@ export class UserService implements OnModuleInit {
       const { userId } = this.authService.verifyToken(token);
       if (userId) {
         return this.findById(userId);
+      }
+    } catch (error) {
+      throw new UnauthorizedException();
+    }
+    return null;
+  }
+
+  public async verifyEmail(token: string): Promise<JwtToken> {
+    try {
+      const { userId } = this.authService.verifyToken(token);
+      if (userId) {
+        await this.userRepository.update(userId, { verified: true });
+        const user = await this.findById(userId);
+        const jwtToken = this.authService.createToken(user.id, user.email);
+        jwtToken.user = user;
+        return jwtToken;
       }
     } catch (error) {
       throw new UnauthorizedException();

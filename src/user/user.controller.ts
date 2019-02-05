@@ -1,37 +1,44 @@
+import { UpdateResult } from 'typeorm';
+
 import {
-  Controller,
   Body,
-  Post,
-  Get,
-  Query,
-  Param,
-  Put,
-  NotFoundException,
-  HttpCode,
+  Controller,
   Delete,
+  Get,
+  HttpCode,
+  NotFoundException,
+  Param,
+  Post,
+  Put,
+  Query,
   Req,
   UseInterceptors,
 } from '@nestjs/common';
-import { User } from '../entities/user.entity';
-import { UserService } from './user.service';
-import { Roles, RolesGuard } from '../roles';
-import { JwtToken } from '../auth/jwt-token.interface';
 import {
+  ApiBearerAuth,
   ApiImplicitBody,
   ApiImplicitQuery,
-  ApiUseTags,
-  ApiBearerAuth,
   ApiOperation,
+  ApiUseTags,
 } from '@nestjs/swagger';
 import {
   ConfigService,
-  RequiredPipe,
-  ParseEntityPipe,
   ParseBooleanPipe,
+  ParseEntityPipe,
+  RequiredPipe,
 } from '@sierralabs/nest-utils';
-import { UpdateResult } from 'typeorm';
+
+import { JwtToken } from '../auth/jwt-token.interface';
+import { User } from '../entities/user.entity';
+import { Roles, RolesGuard } from '../roles';
 import { OwnerInterceptor } from './owner.interceptor';
-import { PasswordRecoveryDto, PasswordResetDto, LoginDto, RegisterDto } from './user.dto';
+import {
+  LoginDto,
+  PasswordRecoveryDto,
+  PasswordResetDto,
+  RegisterDto,
+} from './user.dto';
+import { UserService } from './user.service';
 
 @ApiBearerAuth()
 @ApiUseTags('Users')
@@ -40,13 +47,11 @@ export class UserController {
   constructor(
     protected readonly userService: UserService,
     protected readonly configService: ConfigService,
-  ) { }
+  ) {}
 
   @Post('login')
   @ApiOperation({ title: 'User Login' })
-  public async login(
-    @Body() body: LoginDto
-  ): Promise<JwtToken> {
+  public async login(@Body() body: LoginDto): Promise<JwtToken> {
     return this.userService.login(body.email, body.password);
   }
 
@@ -205,7 +210,9 @@ export class UserController {
 
   @Post('password/recover')
   @ApiOperation({ title: 'Request Password Recovery Email' })
-  public async passwordRecovery(@Body() param: PasswordRecoveryDto): Promise<boolean> {
+  public async passwordRecovery(
+    @Body() param: PasswordRecoveryDto,
+  ): Promise<boolean> {
     return this.userService.recoverPassword(param.email);
   }
 
@@ -215,10 +222,15 @@ export class UserController {
     return this.userService.resetPassword(body.password, body.token);
   }
 
-  @Get('password/verify/resetToken')
+  @Get('password/verify/reset-token')
   @ApiOperation({ title: 'Verify Password Reset Token' })
   public async verifyResetToken(@Query('token') token: string): Promise<User> {
     return this.userService.verifyResetToken(token);
   }
 
+  @Get('verify/email')
+  @ApiOperation({ title: 'Verify E-mail Token' })
+  public async verifyEmail(@Query('token') token: string): Promise<JwtToken> {
+    return this.userService.verifyEmail(token);
+  }
 }

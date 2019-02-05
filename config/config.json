@@ -52,8 +52,14 @@
       }
     },
     "registration": {
-      "subject": "Registration",
-      "template": "register"
+      "isEmailVerification": true,
+      "subject": "Verify your email address",
+      "template": "email-verification",
+      "path": "/email-verification",
+      "tokenExpiration": {
+        "value": "1hr",
+        "description": "one hour"
+      }
     }
   },
   "pagination": {
