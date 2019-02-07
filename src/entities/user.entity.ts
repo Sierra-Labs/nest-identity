@@ -1,6 +1,14 @@
 import {
-  Entity, Column, Index, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn, ManyToMany, JoinTable,
-  TableInheritance, ChildEntity
+  Entity,
+  Column,
+  Index,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+  ManyToMany,
+  JoinTable,
+  TableInheritance,
+  ChildEntity,
 } from 'typeorm';
 import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
@@ -9,7 +17,6 @@ import { Role } from './role.entity';
 
 @Entity()
 export class User {
-
   @ApiModelProperty()
   @PrimaryGeneratedColumn()
   public id: number;
@@ -37,11 +44,11 @@ export class User {
 
   @ApiModelProperty()
   @Column({ default: false })
-  public verified: boolean = false; // tslint:disable-line
+  public verified: boolean;
 
   @ApiModelProperty()
   @Column({ default: false })
-  public deleted: boolean = false; // tslint:disable-line
+  public deleted: boolean;
 
   @ApiModelPropertyOptional()
   @CreateDateColumn()
@@ -61,12 +68,12 @@ export class User {
 
   // @ApiModelPropertyOptional({ type: Role, isArray: true })
   @ManyToMany(type => Role, role => role.users, {
-    eager: true
+    eager: true,
   })
   @JoinTable({
     name: 'user_role',
     joinColumn: { name: 'user_id' },
-    inverseJoinColumn: { name: 'role_id' }
+    inverseJoinColumn: { name: 'role_id' },
   })
   public roles: Role[];
 }

@@ -295,7 +295,7 @@ export class UserService implements OnModuleInit {
     return newUser;
   }
 
-  private sendRegistrationEmail(user: User) {
+  public sendRegistrationEmail(user: User) {
     const config = this.getEmailConfig();
     if (!this.mailerProvider) {
       this.logger.warn(
@@ -338,7 +338,7 @@ export class UserService implements OnModuleInit {
     }
   }
 
-  private getEmailConfig(): any {
+  public getEmailConfig(): any {
     const emailConfig = this.configService.get('email');
     if (!emailConfig) {
       throw new NotImplementedException('`email` settings missing from config');
@@ -413,7 +413,7 @@ export class UserService implements OnModuleInit {
     return true; // always resolve to true to prevent brute force attacks
   }
 
-  private generateTokenUrl(user: User, baseUrl: string, config: any) {
+  public generateTokenUrl(user: User, baseUrl: string, config: any) {
     const tokenExpiration = config.tokenExpiration;
     const payload: JwtPayload = { userId: user.id, email: user.email };
     const token: JwtToken = this.authService.createToken(
