@@ -9,24 +9,30 @@ import { Request } from 'express';
 import { User } from '../entities/user.entity';
 import { AuthGuard } from '@nestjs/passport';
 
+export enum RolesType {
+  $everyone = '$everyone',
+  $authenticated = '$authenticated',
+  $userOwner = '$userOwner',
+}
+
 @Injectable()
 export class RolesGuard extends (AuthGuard('jwt') as { new (): any })
   implements CanActivate {
-  constructor(private readonly reflector: Reflector) {
+  constructor(protected readonly reflector: Reflector) {
     super();
   }
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const handler = context.getHandler();
     const request = context.switchToHttp().getRequest();
-    const roles = this.reflector.get<string[]>('roles', handler) || [];
+    const roles = this.reflector.get<RolesType[]>('roles', handler) || [];
 
     if (roles.length === 0) {
       // if role guard is used, make sure at least one role is specified
       throw new UnprocessableEntityException('No role specified.');
     }
 
-    if (roles.indexOf('$everyone') > -1) {
+    if (roles.indexOf(RolesType.$everyone) > -1) {
       return true; // everyone should activate
     }
 
@@ -56,17 +62,17 @@ export class RolesGuard extends (AuthGuard('jwt') as { new (): any })
     }
   }
 
-  private async checkRole(
-    role: string,
+  protected async checkRole(
+    role: RolesType,
     user: User,
     request: Request,
   ): Promise<boolean> {
     let retval = false;
     switch (role) {
-      case '$authenticated':
+      case RolesType.$authenticated:
         retval = !!user;
         break;
-      case '$userOwner':
+      case RolesType.$userOwner:
         if (request && request.params) {
           retval =
             parseInt(request.params.id, 10) === user.id ||
