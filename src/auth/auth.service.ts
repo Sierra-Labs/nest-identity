@@ -67,14 +67,14 @@ export class AuthService {
   }
 
   public async verifyGoogleAuthToken(token: string): Promise<TokenPayload> {
-    this.logger.log('verifying token...');
+    // this.logger.log('verifying token...');
     try {
       const ticket: LoginTicket = await this.googleClient.verifyIdToken({
         idToken: token,
         audience: this.googleAuthClientID,
       });
-      this.logger.log('ticket:');
-      this.logger.log(ticket);
+      // this.logger.log('ticket:');
+      // this.logger.log(ticket);
       return ticket.getPayload();
     } catch (error) {
       throw new UnauthorizedException('Invalid Google Authentication ID Token');

@@ -249,7 +249,7 @@ export class UserService implements OnModuleInit {
   }
 
   public async loginWithGoogle(token: string): Promise<JwtToken> {
-    this.logger.log('token:'.concat(token));
+    // this.logger.log('token:'.concat(token));
     try {
       const payload: TokenPayload = await this.authService.verifyGoogleAuthToken(
         token,
