@@ -39,6 +39,15 @@
       "default": "/explorer"
     }
   },
+  "google": {
+    "auth": {
+      "clientId": {
+        "doc": "The client ID of the Google API Credential that will be used to decode Google Auth tokens. (e.g. [id_genereated_by_google].apps.googleusercontent.com)",
+        "format": "String",
+        "env": "GOOGLE_AUTH_CLIENT_ID"
+      }
+    }
+  },
   "aws": {
     "accessKeyId": {
       "doc": "The AWS IAM Access Key",
