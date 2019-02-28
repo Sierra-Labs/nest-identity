@@ -24,6 +24,7 @@ import { JwtToken } from '../auth/jwt-token.interface';
 import { User } from '../entities/user.entity';
 import { RolesService } from '../roles/roles.service';
 import { RegisterDto } from './user.dto';
+import { TokenPayload } from 'google-auth-library/build/src/auth/loginticket';
 
 @Injectable()
 export class UserService implements OnModuleInit {
@@ -245,6 +246,33 @@ export class UserService implements OnModuleInit {
       return jwtToken;
     }
     throw new UnauthorizedException();
+  }
+
+  public async loginWithGoogle(token: string): Promise<JwtToken> {
+    // this.logger.log('token:'.concat(token));
+    try {
+      const payload: TokenPayload = await this.authService.verifyGoogleAuthToken(
+        token,
+      );
+      let user: User = await this.findByEmail(payload.email);
+      if (!user) {
+        // auto create account
+        const userInfo = this.userRepository.create({
+          email: payload.email,
+          firstName: payload.given_name,
+          lastName: payload.family_name,
+          password: token,
+        });
+        user = await this.create(userInfo);
+      }
+      const jwtToken = this.authService.createToken(user.id, user.email);
+      jwtToken.user = user;
+      delete jwtToken.user.password; // remove token password
+      return jwtToken;
+    } catch (error) {
+      this.logger.error(error);
+      throw new UnauthorizedException(error);
+    }
   }
 
   public async logout() {

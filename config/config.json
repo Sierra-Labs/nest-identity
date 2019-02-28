@@ -10,6 +10,11 @@
     "basePath": "/api",
     "explorer": false
   },
+  "google": {
+    "auth": {
+      "clientId": "1452394922-o7vp83b3ffagsc5r7iajlpsihd92vo60.apps.googleusercontent.com"
+    }
+  },
   "aws": {
     "accessKeyId": "access-key-id",
     "secretAccessKey": "secret-access-key",

@@ -34,3 +34,8 @@ export class PasswordResetDto {
   @ApiModelProperty()
   token: string;
 }
+
+export class LoginGoogleDto {
+  @ApiModelProperty()
+  token: string;
+}

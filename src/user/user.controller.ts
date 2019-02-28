@@ -37,6 +37,7 @@ import {
   PasswordRecoveryDto,
   PasswordResetDto,
   RegisterDto,
+  LoginGoogleDto,
 } from './user.dto';
 import { UserService } from './user.service';
 
@@ -53,6 +54,14 @@ export class UserController {
   @ApiOperation({ title: 'User Login' })
   public async login(@Body() body: LoginDto): Promise<JwtToken> {
     return this.userService.login(body.email, body.password);
+  }
+
+  @Post('login/google')
+  @ApiOperation({ title: 'User Login with Google' })
+  public async loginWithGoogle(
+    @Body() body: LoginGoogleDto,
+  ): Promise<JwtToken> {
+    return this.userService.loginWithGoogle(body.token);
   }
 
   @Roles('$authenticated')

@@ -36,8 +36,15 @@ export class RolesGuard extends (AuthGuard('jwt') as { new (): any })
       return true; // everyone should activate
     }
 
-    // make sure the user is logged in with JWT
-    const canActivate = await super.canActivate(context);
+    try {
+      // make sure the user is logged in with JWT
+      const canActivate = await super.canActivate(context);
+      if (!canActivate) {
+        return false;
+      }
+    } catch (error) {
+      return false;
+    }
 
     // get user from request object
     const user = request.user || { roles: [] };
