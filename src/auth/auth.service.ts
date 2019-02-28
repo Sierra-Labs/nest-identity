@@ -73,8 +73,7 @@ export class AuthService {
         idToken: token,
         audience: this.googleAuthClientID,
       });
-      // this.logger.log('ticket:');
-      // this.logger.log(ticket);
+      // this.logger.log(`ticket: ${ticket}`);
       return ticket.getPayload();
     } catch (error) {
       throw new UnauthorizedException('Invalid Google Authentication ID Token');
