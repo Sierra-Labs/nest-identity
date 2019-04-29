@@ -1,6 +1,6 @@
 {
   "name": "@sierralabs/nest-identity",
-  "version": "0.2.8",
+  "version": "0.2.9",
   "description": "Standard user management, roles, authentication, and ACL handling.",
   "author": "Sierra Labs",
   "license": "MIT",
@@ -38,7 +38,7 @@
     "@sierralabs/nest-utils": "0.0.16",
     "@types/convict": "^4.2.0",
     "aws-sdk": "^2.396.0",
-    "bcrypt": "^3.0.0",
+    "bcrypt": "^3.0.6",
     "class-transformer": "^0.1.10",
     "class-validator": "^0.8.5",
     "convict": "^4.4.0",
@@ -52,7 +52,7 @@
     "pg": "^7.6.1",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^6.3.3",
-    "typeorm": "^0.2.9",
+    "typeorm": "^0.2.16",
     "typescript": "^3.1.6"
   },
   "devDependencies": {

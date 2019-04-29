@@ -410,11 +410,14 @@ export class UserService implements OnModuleInit {
         this.logger.warn(
           'No `config.from` specified. Could not send password recovery email.',
         );
-      } else if (!config.registration || !config.registration.subject) {
+      } else if (!config.passwordRecovery || !config.passwordRecovery.subject) {
         this.logger.warn(
           'No `config.passwordRecovery.subject` specified. Could not send password recovery email.',
         );
-      } else if (!config.registration || !config.registration.template) {
+      } else if (
+        !config.passwordRecovery ||
+        !config.passwordRecovery.template
+      ) {
         this.logger.warn(
           'No `config.passwordRecovery.template` specified. Could not send password recovery email.',
         );
