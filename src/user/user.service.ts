@@ -429,6 +429,7 @@ export class UserService implements OnModuleInit {
           subject: config.passwordRecovery.subject,
           template: config.passwordRecovery.template,
           context: {
+            url: config.clientBaseUrl,
             tokenExpiration:
               config.passwordRecovery.tokenExpiration.description,
             user,
