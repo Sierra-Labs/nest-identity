@@ -1,4 +1,10 @@
-import { Injectable, NestInterceptor, ExecutionContext, UnprocessableEntityException } from '@nestjs/common';
+import {
+  Injectable,
+  NestInterceptor,
+  ExecutionContext,
+  UnprocessableEntityException,
+  CallHandler,
+} from '@nestjs/common';
 import { Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 
@@ -10,20 +16,24 @@ import { map } from 'rxjs/operators';
 export class OwnerInterceptor implements NestInterceptor {
   constructor(
     private readonly properties: string[],
-    private readonly isUserObject = false
-  ) { }
+    private readonly isUserObject = false,
+  ) {}
 
-  intercept(context: ExecutionContext, stream$: Observable<any>): Observable<any> {
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
     const request = context.switchToHttp().getRequest();
 
     if (!request.user || !request.user.id) {
-      throw new UnprocessableEntityException('No authenticated user specified.');
+      throw new UnprocessableEntityException(
+        'No authenticated user specified.',
+      );
     }
 
     this.properties.forEach(property => {
-      request.body[property] = (this.isUserObject) ? request.user : request.user.id;
+      request.body[property] = this.isUserObject
+        ? request.user
+        : request.user.id;
     });
 
-    return stream$.pipe(map((data) => data));
+    return next.handle().pipe(map(data => data));
   }
 }

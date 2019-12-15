@@ -2,7 +2,7 @@ import * as bcrypt from 'bcrypt';
 import * as _ from 'lodash';
 import { Repository, UpdateResult } from 'typeorm';
 
-import { MailerProvider } from '@nest-modules/mailer';
+import { MailerService } from '@nest-modules/mailer';
 import {
   BadRequestException,
   ConflictException,
@@ -38,8 +38,7 @@ export class UserService implements OnModuleInit {
     protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
     @Optional()
-    @Inject('MailerProvider')
-    protected readonly mailerProvider?: MailerProvider,
+    protected readonly mailerProvider?: MailerService,
   ) {
     if (this.userRepository.manager.connection.options.type === 'postgres') {
       this.LIKE_OPERATOR = 'ILIKE'; // postgres case insensitive LIKE

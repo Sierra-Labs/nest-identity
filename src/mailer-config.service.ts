@@ -1,10 +1,7 @@
 import * as AWS from 'aws-sdk';
 import * as _ from 'lodash';
 
-import {
-  MailerModuleOptions,
-  MailerOptionsFactory,
-} from '@nest-modules/mailer';
+import { MailerOptions, MailerOptionsFactory } from '@nest-modules/mailer';
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { ConfigService } from '@sierralabs/nest-utils';
 
@@ -12,22 +9,24 @@ import { ConfigService } from '@sierralabs/nest-utils';
 export class MailerConfigService implements MailerOptionsFactory {
   constructor(private readonly configService: ConfigService) {}
 
-  createMailerOptions(): MailerModuleOptions {
+  createMailerOptions(): MailerOptions {
     const emailConfig = this.getEmailConfig();
-    let options: MailerModuleOptions = {
+    const options: MailerOptions = {
       defaults: {
         forceEmbeddedImages: emailConfig.forceEmbeddedImages,
         from: emailConfig.from,
       },
-      templateDir: emailConfig.templateDir,
-      templateOptions: {
-        engine: emailConfig.templateEngine,
+      template: {
+        dir: emailConfig.templateDir,
+        options: {
+          engine: emailConfig.templateEngine,
+        },
       },
     };
 
     if (emailConfig.settings) {
       if (emailConfig.settings.SES) {
-        let aws = this.configService.get('aws');
+        const aws = this.configService.get('aws');
         AWS.config.update({
           region: process.env.AWS_REGION || aws.region,
           accessKeyId: process.env.AWS_ACCESS_KEY_ID || aws.accessKeyId,

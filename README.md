@@ -123,7 +123,7 @@ export class UserService extends BaseUserService implements OnModuleInit {
     protected readonly rolesService: RolesService,
     protected readonly moduleRef: ModuleRef,
     @Optional()
-    @Inject('MailerProvider') protected readonly mailerProvider?: MailerProvider,
+    protected readonly mailerProvider?: MailerService,
   ) {
     super(userRepository, configService, moduleRef, rolesService);
   }
@@ -297,7 +297,7 @@ import { AuthModule, MailerConfigService } from '@sierralabs/nest-identity';
 export class AppModule {}
 ```
 
-If you are using a subclassed UserService, make sure to inject a MailerProvider in your constructor, see UserService.ts in this module.
+If you are using a subclassed UserService, make sure to inject a MailerService in your constructor, see UserService.ts in this module.
 
 This module provides default configurations for email sending that you can override in your own config, please config schema and samples in the config directory.
 
