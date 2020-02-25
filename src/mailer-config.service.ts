@@ -1,7 +1,11 @@
 import * as AWS from 'aws-sdk';
 import * as _ from 'lodash';
 
-import { MailerOptions, MailerOptionsFactory } from '@nest-modules/mailer';
+import {
+  MailerOptions,
+  MailerOptionsFactory,
+  PugAdapter,
+} from '@nest-modules/mailer';
 import { Injectable, NotImplementedException } from '@nestjs/common';
 import { ConfigService } from '@sierralabs/nest-utils';
 
@@ -18,9 +22,7 @@ export class MailerConfigService implements MailerOptionsFactory {
       },
       template: {
         dir: emailConfig.templateDir,
-        options: {
-          engine: emailConfig.templateEngine,
-        },
+        adapter: new PugAdapter(),
       },
     };
 

@@ -1,6 +1,6 @@
 {
   "name": "@sierralabs/nest-identity",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Standard user management, roles, authentication, and ACL handling.",
   "author": "Sierra Labs",
   "license": "MIT",
@@ -52,6 +52,7 @@
     "pg": "^7.6.1",
     "reflect-metadata": "^0.1.12",
     "rxjs": "^6.3.3",
+    "swagger-ui-express": "^4.1.2",
     "typeorm": "^0.2.16",
     "typescript": "^3.1.6"
   },
