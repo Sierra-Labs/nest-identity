@@ -1,41 +1,41 @@
-import { ApiModelProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 
 export class LoginDto {
-  @ApiModelProperty()
+  @ApiProperty()
   email: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   password: string;
 }
 
 export class RegisterDto {
-  @ApiModelProperty()
+  @ApiProperty()
   email: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   password: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   firstName: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   lastName: string;
 }
 
 export class PasswordRecoveryDto {
-  @ApiModelProperty()
+  @ApiProperty()
   email: string;
 }
 
 export class PasswordResetDto {
-  @ApiModelProperty()
+  @ApiProperty()
   password: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   token: string;
 }
 
 export class LoginGoogleDto {
-  @ApiModelProperty()
+  @ApiProperty()
   token: string;
 }

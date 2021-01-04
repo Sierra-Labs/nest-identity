@@ -1,7 +1,5 @@
-import { User } from '../entities';
-
-export interface JwtToken {
+export interface JwtToken<T> {
   expiresIn: string;
   accessToken: string;
-  user?: User;
+  user?: T;
 }

@@ -5,20 +5,19 @@ import {
   CreateDateColumn,
   UpdateDateColumn,
   JoinColumn,
-  ManyToOne
+  ManyToOne,
 } from 'typeorm';
-import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsEmail } from 'class-validator';
 import { State } from './state.entity';
 
 @Entity()
 export class Organization {
-
-  @ApiModelProperty()
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @ApiModelProperty()
+  @ApiProperty()
   @Column('text')
   public name: string;
 
@@ -47,18 +46,17 @@ export class Organization {
   @Column('text', { name: 'postal_code', nullable: true })
   public postalCode: string;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @CreateDateColumn()
   public created: Date;
 
   @Column({ name: 'created_by', nullable: true })
   public createdBy: number;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @UpdateDateColumn()
   public modified: Date;
 
   @Column({ name: 'modified_by', nullable: true })
   public modifiedBy: number;
-
 }

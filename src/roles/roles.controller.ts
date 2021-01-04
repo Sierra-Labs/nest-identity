@@ -3,19 +3,16 @@ import { Role } from '../entities/role.entity';
 import { RequiredPipe } from '@sierralabs/nest-utils';
 import { Roles } from './roles.decorator';
 import { RolesService } from './roles.service';
-import { ApiUseTags } from '@nestjs/swagger';
+import { ApiTags } from '@nestjs/swagger';
 
-@ApiUseTags('Roles')
+@ApiTags('Roles')
 @Controller('roles')
 export class RolesController {
-  constructor(
-    protected readonly rolesService: RolesService,
-  ) {}
+  constructor(protected readonly rolesService: RolesService) {}
 
   // @Roles('Admin')
   // @Post()
   // create(@Body(new RequiredPipe()) role: Role): Promise<Role> {
   //   return this.rolesService.create(role);
   // }
-
 }

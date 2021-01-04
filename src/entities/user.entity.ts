@@ -10,21 +10,21 @@ import {
   TableInheritance,
   ChildEntity,
 } from 'typeorm';
-import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Exclude } from 'class-transformer';
 import { IsEmail, IsNotEmpty, MinLength, IsMobilePhone } from 'class-validator';
 import { Role } from './role.entity';
 
 @Entity()
 export class User {
-  @ApiModelProperty()
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   public id: number;
 
   /**
    * User email address for communication and login.
    */
-  @ApiModelProperty()
+  @ApiProperty()
   @Column('citext', { unique: true })
   @IsEmail()
   public email: string;
@@ -34,39 +34,39 @@ export class User {
   @MinLength(8)
   public password: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   @Column('text', { name: 'first_name' })
   public firstName: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   @Column('text', { name: 'last_name' })
   public lastName: string;
 
-  @ApiModelProperty()
+  @ApiProperty()
   @Column({ default: false })
   public verified: boolean;
 
-  @ApiModelProperty()
+  @ApiProperty()
   @Column({ default: false })
   public deleted: boolean;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @CreateDateColumn()
   public created: Date;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @Column({ name: 'created_by', nullable: true })
   public createdBy: number;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @UpdateDateColumn()
   public modified: Date;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @Column({ name: 'modified_by', nullable: true })
   public modifiedBy: number;
 
-  // @ApiModelPropertyOptional({ type: Role, isArray: true })
+  // @ApiPropertyOptional({ type: Role, isArray: true })
   @ManyToMany(type => Role, role => role.users, {
     eager: true,
   })

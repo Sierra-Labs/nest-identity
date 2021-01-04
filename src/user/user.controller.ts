@@ -16,10 +16,10 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
-  ApiImplicitBody,
-  ApiImplicitQuery,
+  ApiBody,
+  ApiQuery,
   ApiOperation,
-  ApiUseTags,
+  ApiTags,
 } from '@nestjs/swagger';
 import {
   ConfigService,
@@ -42,7 +42,7 @@ import {
 import { UserService } from './user.service';
 
 @ApiBearerAuth()
-@ApiUseTags('Users')
+@ApiTags('Users')
 @Controller('users')
 export class UserController {
   constructor(
@@ -51,16 +51,16 @@ export class UserController {
   ) {}
 
   @Post('login')
-  @ApiOperation({ title: 'User Login' })
-  public async login(@Body() body: LoginDto): Promise<JwtToken> {
+  @ApiOperation({ summary: 'User Login' })
+  public async login(@Body() body: LoginDto): Promise<JwtToken<User>> {
     return this.userService.login(body.email, body.password);
   }
 
   @Post('login/google')
-  @ApiOperation({ title: 'User Login with Google' })
+  @ApiOperation({ summary: 'User Login with Google' })
   public async loginWithGoogle(
     @Body() body: LoginGoogleDto,
-  ): Promise<JwtToken> {
+  ): Promise<JwtToken<User>> {
     return this.userService.loginWithGoogle(body.token);
   }
 
@@ -82,7 +82,7 @@ export class UserController {
   }
 
   @Post('register')
-  @ApiOperation({ title: 'New User Registration' })
+  @ApiOperation({ summary: 'New User Registration' })
   public async register(@Body() user: RegisterDto): Promise<User> {
     // try/catch to catch unique key failure, etc
     return await this.userService.register(user);
@@ -156,11 +156,11 @@ export class UserController {
 
   @Get()
   @Roles('Admin')
-  @ApiImplicitQuery({ name: 'search', required: false })
-  @ApiImplicitQuery({ name: 'page', required: false })
-  @ApiImplicitQuery({ name: 'limit', required: false })
-  @ApiImplicitQuery({ name: 'order', required: false })
-  @ApiImplicitQuery({ name: 'includeDeleted', required: false })
+  @ApiQuery({ name: 'search', required: false })
+  @ApiQuery({ name: 'page', required: false })
+  @ApiQuery({ name: 'limit', required: false })
+  @ApiQuery({ name: 'order', required: false })
+  @ApiQuery({ name: 'includeDeleted', required: false })
   public async getAll(
     @Query('page') page?: number,
     @Query('limit') limit?: number,
@@ -218,7 +218,7 @@ export class UserController {
   }
 
   @Post('password/recover')
-  @ApiOperation({ title: 'Request Password Recovery Email' })
+  @ApiOperation({ summary: 'Request Password Recovery Email' })
   public async passwordRecovery(
     @Body() param: PasswordRecoveryDto,
   ): Promise<boolean> {
@@ -226,20 +226,22 @@ export class UserController {
   }
 
   @Put('password/reset')
-  @ApiOperation({ title: 'Reset User Password' })
+  @ApiOperation({ summary: 'Reset User Password' })
   public async passwordReset(@Body() body: PasswordResetDto): Promise<boolean> {
     return this.userService.resetPassword(body.password, body.token);
   }
 
   @Get('password/verify/reset-token')
-  @ApiOperation({ title: 'Verify Password Reset Token' })
+  @ApiOperation({ summary: 'Verify Password Reset Token' })
   public async verifyResetToken(@Query('token') token: string): Promise<User> {
     return this.userService.verifyResetToken(token);
   }
 
   @Get('verify/email')
-  @ApiOperation({ title: 'Verify E-mail Token' })
-  public async verifyEmail(@Query('token') token: string): Promise<JwtToken> {
+  @ApiOperation({ summary: 'Verify E-mail Token' })
+  public async verifyEmail(
+    @Query('token') token: string,
+  ): Promise<JwtToken<User>> {
     return this.userService.verifyEmail(token);
   }
 }

@@ -28,7 +28,7 @@ import { TokenPayload } from 'google-auth-library/build/src/auth/loginticket';
 
 @Injectable()
 export class UserService implements OnModuleInit {
-  protected authService: AuthService;
+  protected authService: AuthService<User>;
   private logger = new Logger('UserService');
   private LIKE_OPERATOR: string = 'LIKE';
 
@@ -50,7 +50,7 @@ export class UserService implements OnModuleInit {
    */
   onModuleInit() {
     // Prevents circular dependency issue since AuthService also requires UserService
-    this.authService = this.moduleRef.get<AuthService>('AuthService');
+    this.authService = this.moduleRef.get<AuthService<User>>('AuthService');
     this.initialize();
   }
 
@@ -211,7 +211,7 @@ export class UserService implements OnModuleInit {
     return user;
   }
 
-  public async login(email: string, password: string): Promise<JwtToken> {
+  public async login(email: string, password: string): Promise<JwtToken<User>> {
     const user = await this.findByEmail(email, { selectPassword: true });
 
     if (!user || user.deleted) {
@@ -247,7 +247,7 @@ export class UserService implements OnModuleInit {
     throw new UnauthorizedException();
   }
 
-  public async loginWithGoogle(token: string): Promise<JwtToken> {
+  public async loginWithGoogle(token: string): Promise<JwtToken<User>> {
     // this.logger.log('token:'.concat(token));
     try {
       const payload: TokenPayload = await this.authService.verifyGoogleAuthToken(
@@ -447,7 +447,7 @@ export class UserService implements OnModuleInit {
   public generateTokenUrl(user: User, baseUrl: string, config: any) {
     const tokenExpiration = config.tokenExpiration;
     const payload: JwtPayload = { userId: user.id, email: user.email };
-    const token: JwtToken = this.authService.createToken(
+    const token: JwtToken<User> = this.authService.createToken(
       payload,
       tokenExpiration.value,
     );
@@ -488,7 +488,7 @@ export class UserService implements OnModuleInit {
     return null;
   }
 
-  public async verifyEmail(token: string): Promise<JwtToken> {
+  public async verifyEmail(token: string): Promise<JwtToken<User>> {
     try {
       const { userId } = this.authService.verifyToken(token);
       if (userId) {

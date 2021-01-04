@@ -65,7 +65,7 @@ The first step is to make sure you have your `User` and `Role` entities models d
 ```typescript
 // entities/user.entity.ts
 import { Entity, Column } from 'typeorm';
-import { ApiModelProperty } from '@nestjs/swagger';
+import { ApiProperty } from '@nestjs/swagger';
 import { ReplaceRelationType } from '@sierralabs/nest-utils';
 import { User as BaseUser } from '@sierralabs/nest-identity';
 import { Role } from './role.entity';
@@ -75,7 +75,7 @@ export class User extends BaseUser {
   /**
    * Patient medical ID number.
    */
-  @ApiModelProperty()
+  @ApiProperty()
   @Column('text', { name: 'patient_number', nullable: true })
   public patientNumber: string;
 

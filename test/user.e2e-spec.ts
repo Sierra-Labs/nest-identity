@@ -9,11 +9,12 @@ import { JwtToken } from '../src/auth/jwt-token.interface';
 import { RolesService } from '../src/roles/roles.service';
 import { UserService } from '../src/user/user.service';
 import { UserMock } from './mocks/user.mock';
+import { User } from '../src/entities';
 
 describe('UserController (e2e)', () => {
   let app: INestApplication;
   let server: supertest.SuperTest<supertest.Test>;
-  let jwtToken: JwtToken;
+  let jwtToken: JwtToken<User>;
 
   let userService: UserService;
   let rolesService: RolesService;

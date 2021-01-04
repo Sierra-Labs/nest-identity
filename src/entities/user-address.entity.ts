@@ -6,17 +6,16 @@ import {
   JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
-  OneToMany
+  OneToMany,
 } from 'typeorm';
-import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Organization } from './organization.entity';
 import { State } from './state.entity';
 import { User } from './user.entity';
 
 @Entity()
 export class UserAddress {
-
-  @ApiModelProperty()
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   public id: number;
 
@@ -46,14 +45,14 @@ export class UserAddress {
   @Column({ default: true })
   public isActive: boolean;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @CreateDateColumn()
   public created: Date;
 
   @Column({ name: 'created_by', nullable: true })
   public createdBy: number;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @UpdateDateColumn()
   public modified: Date;
 

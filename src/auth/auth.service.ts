@@ -12,7 +12,7 @@ import {
  * Provides an authentication service for creating JWT access token.
  */
 @Injectable()
-export class AuthService {
+export class AuthService<T> {
   private logger = new Logger('AuthService');
   private defaultExpiration: string;
   private secret: string;
@@ -35,13 +35,13 @@ export class AuthService {
    * @param userId The unique user ID of the current logged in user.
    * @param email The email address of the current logged in user.
    */
-  public createToken(userId: number, email: string): JwtToken;
-  public createToken(payload: JwtPayload, expiresIn?: string): JwtToken;
+  public createToken(userId: number, email: string): JwtToken<T>;
+  public createToken(payload: JwtPayload, expiresIn?: string): JwtToken<T>;
   public createToken(
     payloadOrUserId: JwtPayload | number,
     expiresInOrEmail: string,
     expiresInOptional?: string,
-  ): JwtToken {
+  ): JwtToken<T> {
     let payload: JwtPayload;
     let expiresIn = this.defaultExpiration;
     if (payloadOrUserId instanceof Object) {

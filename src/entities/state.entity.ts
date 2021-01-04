@@ -1,17 +1,22 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
-import { ApiModelProperty, ApiModelPropertyOptional } from '@nestjs/swagger';
+import {
+  Entity,
+  Column,
+  PrimaryGeneratedColumn,
+  CreateDateColumn,
+  UpdateDateColumn,
+} from 'typeorm';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 
 /**
  * US and Territory State names, abbreviations, and meta data from https://statetable.com/
  */
 @Entity()
 export class State {
-
-  @ApiModelProperty()
+  @ApiProperty()
   @PrimaryGeneratedColumn()
   public id: number;
 
-  @ApiModelProperty()
+  @ApiProperty()
   @Column('text')
   public name: string;
 
@@ -45,8 +50,7 @@ export class State {
   @Column('text', { name: 'circuit_court', select: false }) // remove from default query
   public circuitCourt: string;
 
-  @ApiModelPropertyOptional()
+  @ApiPropertyOptional()
   @CreateDateColumn({ select: false }) // remove from default query
   public created: Date;
-
 }
