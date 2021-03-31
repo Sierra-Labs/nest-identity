@@ -1,6 +1,7 @@
 import {
   CanActivate,
   ExecutionContext,
+  ForbiddenException,
   Injectable,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -48,6 +49,13 @@ export class RolesGuard extends (AuthGuard('jwt') as { new (): any })
     // get user from request object
     const user = request.user || { roles: [] };
     if (!user.roles) user.roles = [];
+
+    if (typeof user.deleted !== 'undefined' && user.deleted) {
+      throw new ForbiddenException(
+        'Account has been deactivated.',
+        'Deactivated',
+      );
+    }
 
     // test to see if any of the user's roles are in the acceptable roles
     for (const role of user.roles) {
