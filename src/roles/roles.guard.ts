@@ -32,18 +32,17 @@ export class RolesGuard extends (AuthGuard('jwt') as { new (): any })
       throw new UnprocessableEntityException('No role specified.');
     }
 
-    if (roles.indexOf(RolesType.$everyone) > -1) {
-      return true; // everyone should activate
-    }
+    // if $everyone still continue to decode JWT and get user info
+    const isAllowEveryone = roles.indexOf(RolesType.$everyone) > -1;
 
     try {
       // make sure the user is logged in with JWT
       const canActivate = await super.canActivate(context);
       if (!canActivate) {
-        return false;
+        return isAllowEveryone;
       }
     } catch (error) {
-      return false;
+      return isAllowEveryone;
     }
 
     // get user from request object
@@ -67,6 +66,8 @@ export class RolesGuard extends (AuthGuard('jwt') as { new (): any })
         return true;
       }
     }
+
+    return isAllowEveryone;
   }
 
   protected async checkRole(
