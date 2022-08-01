@@ -2,21 +2,27 @@
 
 ## Description
 
-Standard NestJS user management, roles, authentication, and ACL handling.
+Contains cross-project commonly used NestJS user management, roles, authentication, and ACL handling.
 
 ## Requirements
 
 Make sure to have the following installed
 
 - `NodeJS / NPM` for application
+* `NestJS` for application framework
 
 ## Installation
 
 To use the `nest-identity` node module:
 
 ```bash
-$ npm login #make sure you request access to @sierralabs
 $ npm install --save @sierralabs/nest-identity
+```
+
+or with yarn
+
+```bash
+$ yarn add @sierralabs/nest-identity
 ```
 
 ## Configuration
@@ -43,10 +49,10 @@ The following is the recommended folder structure for your source files:
 
 - `entities/` - place your NestJS entities here
   - `user.entity.ts` - extends nest-identity's user.entity.ts
-  - `user-address.entity.ts` - extends nest-identity's user-address.entity.ts
-  - `user-phone.entity.ts` - extends nest-identity's user-phone.entity.ts
+  - `user-address.entity.ts` - extends nest-identity's user-address.entity.ts (optional)
+  - `user-phone.entity.ts` - extends nest-identity's user-phone.entity.ts (optional)
   - `roles.entity.ts` - extends nest-identity's role.entity.ts
-  - `state.entity.ts` - US address state code reference
+  - `state.entity.ts` - US address state code reference (optional)
   - `organization.ts`
   - ...
 - `user/`
@@ -303,20 +309,14 @@ This module provides default configurations for email sending that you can overr
 
 Finally, you also need create the email templates in the directory you specified in your config file. The default template directory is `public/templates`. You can copy the default templates provided by this module and customize it according to your needs.
 
-## User Controller
-
-> TODO: Document all REST API endpoints as part of the UserController base class.
-
-## Roles Controller
-
-> TODO: Document all REST API endpoints as part of the RolesController base class.
 
 ## Contributing
 
 To contribute to the `nest-identity` project please make sure to have the following configured in your development environment. Submit pull request to master after making sure all unit tests run successful.
 
 - `docker` for postgres database
-- `tslint` for TypeScript linting (tslint in VSCode to automate linting)
+- `eslint` for Javascript/TypeScript linting (tslint in VSCode to automate linting)
+- `prettier` for code formatting and standardization
 - `jest` for unit testing
 
 ```bash
@@ -327,12 +327,11 @@ $ npm install
 
 Make sure to have the following installed:
 
-- `Node 8.10+ / NPM 6.1+` for application
+- `Node 12+ / NPM 6.1+` for application
 - `docker` for postgres database
 - `jest` for unit testing
-- `tslint` for TypeScript linting (tslint in VSCode to automate linting)
+- `eslint` for TypeScript linting (tslint in VSCode to automate linting)
 - `prettier` for auto formatting in VSCode
-- Make sure you setup an [npmjs.com](http://www.npmjs.com) account and request access to the `@sierralabs` private repos for the NPM dependencies.
 
 Install all node module dependencies:
 
