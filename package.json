@@ -4,6 +4,11 @@
   "description": "Contains cross-project commonly used NestJS code for user management, roles, authentication, and ACL handling.",
   "author": "Sierra Labs",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/sierra-labs/nest-identity.git"
+  },
+  "homepage": "https://github.com/sierra-labs/nest-identity#readme",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "files": [
